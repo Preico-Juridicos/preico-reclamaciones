@@ -1,0 +1,158 @@
+<div style="margin: 100px;font-family: monospace, monospace;">
+    <h1 style="text-align: center;">ESCRITO DE RECLAMACIÓN DE COMISIÓN POR DESCUBIERTO<br /><u><b>PREICO JURIDICOS</u></b></h1>
+    <div style="margin: 50px 0;">
+        <p>
+            Yo, <u>${formData.nombreCompleto}</u> con DNI <u>${formData.dni}</u> Con
+            dirección de vivienda en <u>${formData.address}</u>.
+        </p>
+    </div>
+    <div>
+        <p>
+            Hoy día ${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}
+            presento este escrito para formular la RECLAMACIÓN fehaciente en los
+            términos previstos en la Ley General de Consumidores y Usuarios, en base a
+            los siguientes;
+        </p>
+        <ol>
+            <li>
+            ¿Qué entidad Bancaria te ha cobrado las comisiones?
+            <p>
+                <b>${formData.entidadBancaria}</b>
+            </p>
+            </li>
+
+            <li>Número de cuenta Bancaria:
+            <p>
+                <b>${formData.numeroCuenta}</b>
+            </p>
+            </li>
+            <li>
+            ¿En qué fechas ha venido cargando la entidad financiera las comisiones
+            en tu cuenta bancaria?
+            <p>
+            ${formData.comisiones .map( (com) => `
+            ${com.fecha} importe de: ${com.importe} €<br />
+            ` ) .join("")}
+            <p>
+                <b>
+                    Resultando un importe total de: ${formData.comisiones .reduce((acc,
+                    curr) => acc + parseFloat(curr.importe || 0), 0) .toFixed(2)}
+                    €
+                </b>
+            </p>
+            </li>
+        </ol>
+    </div>
+    <div>
+      <p></p><b>SEGUNDO.-</b>
+      
+        El cobro de los importes citados es CONTRARIA A LA ORDEN MINISTERIAL
+        EHA/2899/2011, de 28 OCTUBRE, y a la posición del Banco de España.
+      </p>
+      <p>
+        La orden ministerial EHA/2899/2011, de 28 de OCTUBRE, de transparencia y
+        protección del cliente de servicios bancarios, concretamente al artículo
+        3, establece que “ Sólo podrán percibirse comisiones o repercutirse
+        gastos por servicios solicitados en firme o aceptados expresamente por
+        un cliente y siempre que respondan a servicios efectivamente prestados o
+        gastos habidos”.
+      </p>
+    </div>
+    <div>
+      <p></p><b>TERCERO.-</b>
+      
+        El servicio de Reclamaciones del Banco España recoge este criterio en su
+        memoria del servicio de reclamaciones: Es criterio del servicio de
+        Reclamaciones del Banco de España que el adeudo de esta comisión sólo
+        puede ser posible si, además de aparecer recogida en el contrato, se
+        acredita que:
+      </p>
+      <ul>
+        <li>
+          Su devengo está vinculado a la existencia efectiva de gestiones de
+          reclamación realizadas ante el cliente deudor (algo que, a juicio de
+          este servicio, no está justificado con la simple remisión de una carta
+          periódicamente generada por el ordenador).
+        </li>
+        <li>
+          Es la única en la reclamación de un mismo saldo. No obstante, se
+          considera que su adeudo es compatible con la repercusión de gastos
+          soportados por la entidad como consecuencia, en su caso, de la
+          intervención de terceros en las gestiones de reclamación (por ejemplo,
+          Notaria)
+        </li>
+        <li>
+          Dada su naturaleza, su cuantía es única, cualquiera que sea el importe
+          del saldo reclamado, no admitiéndose, por tanto, tarifas porcentuales.
+        </li>
+      </ul>
+    </div>
+    <div>
+      <p></p><b>CUARTO.-</b>
+        Además, y como criterio adicional, se considera que la aplicación
+        automática de dicha comisión no constituye una buena práctica bancaria,
+        ya que la reclamación debe realizarse teniendo en cuenta las
+        circunstancias particulares de cada impagado y de cada cliente. En
+        efecto, solo cuando se analiza, caso por caso, la procedencia de llevar
+        a cabo cada reclamación, se justifica, bajo el principal de la buena fe,
+        la realización de gestiones individualizadas de recuperación.
+      </p>
+    </div>
+    <div>
+        <p></p><b>QUINTO.-</b>
+        Según la sentencia del Tribunal Supremo nº 566/19, de 25 de octubre,
+        señala que:
+        </p>
+        <p>
+            "No se cumple las exigencias del Banco de España para este tipo de
+            comisiones, porque prevé que podrá reiterarse y se plantea como una
+            reclamación automática. Tampoco discrimina periodos de mora, de modo
+            que basta la inefectividad de la cuota en la fecha de pago prevista
+            para que, además de los intereses moratorios, se produzca el devengo
+            de la comisión."
+        </p>
+        <p>
+        "Además, una clausula como la enjuiciada contiene una alteración de la
+        carga de la prueba en perjuicio del consumidor, pues debería ser el
+        Banco quien probara la realidad de la gestión y su precio, pero, con la
+        clausula, se traslada al consumidor la obligación de probar o que no
+        haya habido gestión. Lo que también podría incurrir en la prohibición
+        prevista en el art. 88.2 TRLGCU."
+        </p>
+    </div>
+    <div>
+      <p></p><b>SEXTO.-</b>
+        La memoria del servicio de Reclamaciones del Banco de España a este
+        respecto es accesible en el siguiente enlace, que recoge los criterios
+        Específicos de buenas Prácticas Bancarias del Banco de España:
+      </p>
+      <p>
+        <a
+          href="https://www.bde.es/f/webbde/Secciones/Publicaciones/PublicacionesAnuales/MemoriaServicioReclamaciones/10/buenas_practicas.pdf"
+        >
+        https://www.bde.es/f/webbde/Secciones/Publicaciones/PublicacionesAnuales/MemoriaServicioReclamaciones/10/buenas_practicas.pdf</a
+        >
+      </p>
+    </div>
+    <div>
+      <b><p>Por todo ello SOLICITO:</p>
+      <ul>
+        <li>
+          Que me sea devuelta en la cuenta señalada y con carácter inmediato las
+          cantidades cobradas en concepto de comisión por descubierto, por ser
+          contraria a la posición del Banco de España, como ha quedado
+          debidamente acreditado, y a la Orden Ministerial referida; y o sea aplicada en el futuro ninguna otra comisión por este concepto.
+        </li>
+      </ul>
+      </b> 
+    </div>
+    <div>
+      <p>
+        Sin otro particular, confiando en no verme obligado a considerar otras
+        acciones y esperando a que acceda a mis peticiones, en un plazo NO
+        SUPERIOR A 20 DÍAS.
+      </p>
+      <p>Atentamente;</p>
+      ${formData.nombreCompleto}<br/>${formData.dni}
+    </div>
+</div>

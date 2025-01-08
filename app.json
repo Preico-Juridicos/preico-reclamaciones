@@ -36,6 +36,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2b684315-3d4d-498c-b523-527cc2f55319"
+      }
+    },
+    "owner": "preicodev"
   }
 }
