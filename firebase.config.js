@@ -23,4 +23,14 @@ const auth = initializeAuth(app, {
 const firestore = getFirestore(app);
 const database = getDatabase(app);
 
-export { app, auth, firestore, database };
+const getCurrentUserId = () => {
+  const user = auth.currentUser;
+
+  if (user) {
+    return user.uid;
+  } else {
+    return null;
+  }
+};
+
+export { app, auth, firestore, database, getCurrentUserId };

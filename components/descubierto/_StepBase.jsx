@@ -1,15 +1,11 @@
 import React, { useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-} from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
 import { createStyles } from "../../constants/styles";
 
 const _StepBase = ({ navigation, currentStep, updateStep }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   useEffect(() => {
     if (currentStep !== 0) {

@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, Pressable } from "react-native";
-import { useTheme } from "../contexts/ThemeContext";
-import { createStyles } from "../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 const PrimaryButton = (props) => {
   const {

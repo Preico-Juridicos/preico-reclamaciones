@@ -5,8 +5,9 @@ import * as Yup from "yup";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore"; // Añadir getFirestore
 import { PrimaryButton, SecondaryButton } from "../Buttons";
-import { firestore, getCurrentUserId } from "../../constants/firebaseConfig";
-import { createStyles } from "../../constants/styles";
+import { firestore, getCurrentUserId } from "@/firebase.config";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 const getUserInfo = async (docId) => {
   const db = getFirestore(); // Inicializa Firestore
@@ -27,7 +28,8 @@ const getUserInfo = async (docId) => {
 };
 
 const StepConfirmarDireccion = ({ navigation, currentStep, updateStep }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   const [initialValues, setInitialValues] = useState({
     address: "",
@@ -118,7 +120,7 @@ const StepConfirmarDireccion = ({ navigation, currentStep, updateStep }) => {
       );
 
       // Realiza la navegación u otras acciones necesarias
-        navigation.navigate("StepRevisionDocumentos");
+      navigation.navigate("StepRevisionDocumentos");
     } catch (error) {
       console.error("Error al manejar el formulario:", error);
     }

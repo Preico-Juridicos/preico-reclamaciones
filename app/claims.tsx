@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { useNavigation } from "expo-router";
+import { useRouter } from "expo-router";
 import createStyles from "@/assets/styles/themeStyles";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -10,13 +11,23 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  Animated,
+  Button,
 } from "react-native";
 import { FlatList } from "react-native-gesture-handler";
 import { MaterialIcons } from "@expo/vector-icons";
+
+import {
+  NavigationContainer,
+  NavigationIndependentTree,
+} from "@react-navigation/native";
+import { createStackNavigator } from "@react-navigation/stack";
+
 import { firestore } from "@/firebase.config";
 import { collection, getDocs } from "firebase/firestore";
+
 import Descubierto from "@components/descubierto/Descubierto";
+
+const ModalStack = createStackNavigator();
 
 type ClaimType = {
   id: string;
@@ -27,13 +38,15 @@ type ClaimType = {
 };
 
 export default function claims() {
-  const navigation = useNavigation();
+//   const navigation = useNavigation();
   const { isDarkMode } = useTheme();
   const style = createStyles(isDarkMode);
-  const [com, setCom] = useState<React.ReactElement | null>(null);
+  const router = useRouter();
 
   //   const styles = createStyles(isDarkMode);
   const [claims, setClaims] = useState<ClaimType[]>([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedClaim, setSelectedClaim] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchClaims = async () => {
@@ -61,25 +74,50 @@ export default function claims() {
     fetchClaims();
   }, []);
 
-  const handleCardPress = (id: string): void => {
-      switch (id) {
-          case 'descubierto':
-            console.log(`Formulario seleccionado: ${id}`);
-            // navigation.navigate("Descubierto");
-            setCom(<Descubierto />);
-            break;
-    
-        default:
-            break;
-    }
-    // Aquí puedes abrir el formulario correspondiente
+  const handleCardPress = (claim: ClaimType): void => {
+    setSelectedClaim(claim.id);
+    setModalVisible(true);
   };
+
+  const getDynamicComponent = (claim: ClaimType) => {
+    console.log("Claim seleccionado:", claim);
+    // Redirige según el ID del claim
+    switch (claim.id) {
+      case "descubierto":
+        return () => {
+          router.push(`/claims/${claim.id}`); // Redirige a /descubierto
+        };
+
+      default:
+        return () => {
+          router.push(`/claims/${claim.id}`); // Redirige a la ruta dinámica /[claimId]
+        };
+    }
+  };
+  const ModalNavigator = () => (
+    <NavigationIndependentTree>
+      <NavigationContainer>
+        <ModalStack.Navigator
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          {selectedClaim && (
+            <ModalStack.Screen
+              name={selectedClaim}
+              component={getDynamicComponent(selectedClaim)}
+            />
+          )}
+        </ModalStack.Navigator>
+      </NavigationContainer>
+    </NavigationIndependentTree>
+  );
 
   const renderCard = ({ item }: { item: ClaimType }) => {
     return (
       <TouchableOpacity
         style={[style.claimCard]}
-        onPress={() => handleCardPress(item.id)}
+        onPress={() => handleCardPress(item)}
         activeOpacity={0.8}
       >
         <Image source={{ uri: item.image }} style={style.claimCardImage} />
@@ -104,9 +142,52 @@ export default function claims() {
       </TouchableOpacity>
     );
   };
+  const styles = StyleSheet.create({
+    screenMainContainer: {
+      flex: 1,
+      backgroundColor: "#fff",
+      padding: 20,
+    },
+    screenTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      marginBottom: 10,
+    },
+    overlayContainer: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0, 0, 0, 0.5)",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 999,
+    },
+    modalContent: {
+      backgroundColor: "white",
+      padding: 20,
+      borderRadius: 10,
+      width: "90%",
+      alignItems: "center",
+      minHeight: 500,
+    },
+  });
 
   return (
     <View style={style.screenMainContainer}>
+      {/* Modal independiente */}
+      {modalVisible && (
+        <View style={styles.overlayContainer}>
+          <View style={styles.modalContent}>
+            <ModalNavigator />
+            <Button
+              title="Cerrar"
+              onPress={() => {
+                setModalVisible(false);
+                setSelectedClaim(null);
+              }}
+            />
+          </View>
+        </View>
+      )}
+      {/* Contenido principal */}
       <Text style={style.screenTitle}>Reclamaciónes Disponibles</Text>
       <FlatList
         data={claims}
@@ -114,7 +195,6 @@ export default function claims() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={style.ScreenContentWrapper}
       />
-      {com}
     </View>
   );
 }

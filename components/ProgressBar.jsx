@@ -1,8 +1,9 @@
 import React from "react";
 import { View, } from "react-native";
 import * as Progress from "react-native-progress";
-import { useTheme } from "../contexts/ThemeContext";
-import { createStyles } from "../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
+
 
 const ProgressBar = ({ currentStep, totalSteps }) => {
   const progress = (currentStep - 1) / (totalSteps - 1); // Progreso entre 0 y 1

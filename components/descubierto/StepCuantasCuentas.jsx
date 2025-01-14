@@ -2,10 +2,13 @@ import React, { useEffect } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createStyles } from "../../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
+
 
 const StepCuantasCuentas = ({ navigation, currentStep, updateStep }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   useEffect(() => {
     if (currentStep !== 6) {

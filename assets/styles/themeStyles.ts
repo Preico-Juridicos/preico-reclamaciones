@@ -94,6 +94,10 @@ const createStyles = (isDarkMode = useTheme().isDarkMode) => {
       borderWidth: 1,
       elevation: 3,
     },
+    cardText: {
+      color: theme.text,
+      fontSize: 16,
+    },
 
     // Botones
     buttonPrimary: {
@@ -227,14 +231,12 @@ const createStyles = (isDarkMode = useTheme().isDarkMode) => {
     screenText: {
       fontSize: 16,
       color: "#666",
-    //   textAlign: "center",
+      //   textAlign: "center",
     },
 
     ScreenContentWrapper: {
-        margin: 16,
+      margin: 16,
     },
-
-
 
     //   Claims
     claimCard: {
@@ -286,6 +288,132 @@ const createStyles = (isDarkMode = useTheme().isDarkMode) => {
       color: theme.text,
       marginTop: 4,
       textAlign: "center",
+    },
+
+    // Estilos para el formulario de descubierto
+    formMainView: {
+      flex: 1,
+      backgroundColor: theme.background,
+        paddingHorizontal: 20,
+      gap: 10,
+    //   zIndex: 10,
+    //   position: "absolute",
+    //   top: 0,
+    //   left: 0,
+    },
+    formContainer: {
+      flex: 1,
+      backgroundColor: theme.background,
+      paddingHorizontal: 20,
+      gap: 10,
+    },
+    formTitle: {
+      fontSize: 22,
+      marginBottom: 40,
+      color: theme.text,
+      fontFamily: "Lato_900Black",
+    },
+    formText: {
+      fontSize: 16,
+      color: theme.text,
+      textAlign: "justify",
+      marginBottom: 10,
+      fontFamily: "Lato_400Regular",
+    },
+    formLabel: {
+      fontSize: 16,
+      marginBottom: 5,
+      color: theme.text,
+    },
+    formInput: {
+      borderWidth: 1,
+      borderColor: theme.text,
+      borderRadius: 8,
+      padding: 10,
+      marginBottom: 15,
+      color: theme.text,
+    },
+    formError: {
+      fontSize: 14,
+      backgroundColor: "#ffeb3b",
+      color: "#333",
+      padding: 10,
+      textAlign: "center",
+    },
+    formReadOnly: {
+      padding: 10,
+      borderWidth: 1,
+      borderColor: "#000",
+      borderRadius: 5,
+      backgroundColor: "#ccc",
+      marginTop: 5,
+    },
+    formButton: {
+      backgroundColor: theme.buttonPrimary,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 8,
+      alignItems: "center",
+      shadowColor: theme.text,
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      shadowOffset: { width: 0, height: 2 },
+    },
+    formButtonText: {
+      color: theme.buttonTextPrimary,
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+    formNavigationButtonsContainer: {
+      gap: 10,
+      marginTop: 40,
+    },
+    // Estilos para el componente CollapsibleView
+    collapsibleContainer: {
+      borderWidth: 1,
+      borderColor: theme.background,
+      borderRadius: 8,
+      borderBottomLeftRadius: 0,
+      borderBottomRightRadius: 0,
+
+      backgroundColor: theme.background,
+    },
+    collapsibleHeader: {
+      padding: 10,
+      backgroundColor: theme.backgroundColorHighlight,
+      borderColor: theme.background,
+      borderBottomWidth: 1,
+      borderTopLeftRadius: 8,
+      borderTopRightRadius: 8,
+    },
+    collapsibleHeaderText: {
+      color: theme.buttonTextSecondary,
+      fontWeight: "bold",
+      fontSize: 16,
+    },
+    collapsibleContent: {
+      padding: 10,
+      backgroundColor: "transparent",
+      borderBottomLeftRadius: 8,
+      borderBottomRightRadius: 8,
+    },
+    collapsibleContentText: {
+      padding: 10,
+      fontSize: 16,
+      color: theme.text,
+    },
+    // Estilos para el componente deplegable de bancos
+    dropdownContainer: {
+      borderWidth: 1,
+      borderColor: theme.background,
+      borderRadius: 8,
+      backgroundColor: theme.background,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+    },
+    dropdownText: {
+      fontSize: 16,
+      color: theme.text,
     },
   });
 };
