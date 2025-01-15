@@ -24,11 +24,13 @@ import StepRevisionDocumentos from "@/components/claimTypeDescubierto/StepRevisi
 import StepPeticionPR from "@/components/claimTypeDescubierto/StepPeticionPR";
 import StepGenerarDocumentos from "@/components/claimTypeDescubierto/StepGenerarDocumentos";
 import Summary from "@/components/claimTypeDescubierto/Summary";
+import { getCurrentUserId } from "@/firebase.config";
 
 // Tipos
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
+  claimIdentifier?: string;
   updateData: (stepId: string, data: Record<string, any>) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
@@ -51,10 +53,13 @@ const ClaimForm: React.FC = () => {
   const { claimId } = useLocalSearchParams<{ claimId: string }>();
 
   // Estado para los datos del formulario
-  const [formData, setFormData] = useState<Record<string, Record<string, any>>>({});
+  const [formData, setFormData] = useState<Record<string, Record<string, any>>>(
+    {}
+  );
   const [currentStepId, setCurrentStepId] = useState<string>("1");
   const [canContinue, setCanContinue] = useState<boolean>(true);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
+  const [claimIdentifier, setClaimIdentifier] = useState<string | null>(null);
 
   // Mapa de pasos por tipo de claim
   const claimSteps: ClaimSteps = {
@@ -89,13 +94,21 @@ const ClaimForm: React.FC = () => {
   }
 
   // Actualizar los datos del paso actual en el estado y AsyncStorage
-  const updateData = async (stepId: string, data: Record<string, any>) => {
+  const updateData = async (
+    stepId: string,
+    data: Record<string, any>,
+    isInFireBase: boolean = false
+  ) => {
     try {
-      setFormData((prevData) => {
-        const updatedData = { ...prevData, [stepId]: data };
-        AsyncStorage.setItem("formData", JSON.stringify(updatedData));
-        return updatedData;
-      });
+      if (!isInFireBase) {
+        setFormData((prevData) => {
+          const updatedData = { ...prevData, [stepId]: data };
+          AsyncStorage.setItem("formData", JSON.stringify(updatedData));
+          return updatedData;
+        });
+      } else {
+        console.log(data);
+      }
     } catch (error) {
       console.error("Error al actualizar los datos:", error);
     }
@@ -129,7 +142,10 @@ const ClaimForm: React.FC = () => {
     const currentIndex = steps.findIndex((step) => step.id === currentStepId);
 
     if (currentStep.onNext) {
-      currentStep.onNext(formData[currentStepId] || {});
+      const result = currentStep.onNext(formData[currentStepId] || {});
+      if (result) {
+        setClaimIdentifier(result); // Guardar el identificador en el estado
+      }
     }
 
     if (currentIndex < steps.length - 1) {
@@ -178,6 +194,7 @@ const ClaimForm: React.FC = () => {
       } else {
         console.log("No se encontró ningún dato en formData");
       }
+      console.log(getCurrentUserId());
     } catch (error) {
       console.error("Error al obtener formData de AsyncStorage:", error);
     }
@@ -245,3 +262,4 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
+

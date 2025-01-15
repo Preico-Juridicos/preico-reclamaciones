@@ -38,15 +38,13 @@ type ClaimType = {
 };
 
 export default function claims() {
-//   const navigation = useNavigation();
+  //   const navigation = useNavigation();
   const { isDarkMode } = useTheme();
   const style = createStyles(isDarkMode);
   const router = useRouter();
 
   //   const styles = createStyles(isDarkMode);
   const [claims, setClaims] = useState<ClaimType[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedClaim, setSelectedClaim] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchClaims = async () => {
@@ -75,43 +73,10 @@ export default function claims() {
   }, []);
 
   const handleCardPress = (claim: ClaimType): void => {
-    setSelectedClaim(claim.id);
-    setModalVisible(true);
+    router.push(`/claims/${claim.id}`);
+    // setSelectedClaim(claim.id);
+    // setModalVisible(true);
   };
-
-  const getDynamicComponent = (claim: ClaimType) => {
-    console.log("Claim seleccionado:", claim);
-    // Redirige según el ID del claim
-    switch (claim.id) {
-      case "descubierto":
-        return () => {
-          router.push(`/claims/${claim.id}`); // Redirige a /descubierto
-        };
-
-      default:
-        return () => {
-          router.push(`/claims/${claim.id}`); // Redirige a la ruta dinámica /[claimId]
-        };
-    }
-  };
-  const ModalNavigator = () => (
-    <NavigationIndependentTree>
-      <NavigationContainer>
-        <ModalStack.Navigator
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          {selectedClaim && (
-            <ModalStack.Screen
-              name={selectedClaim}
-              component={getDynamicComponent(selectedClaim)}
-            />
-          )}
-        </ModalStack.Navigator>
-      </NavigationContainer>
-    </NavigationIndependentTree>
-  );
 
   const renderCard = ({ item }: { item: ClaimType }) => {
     return (
@@ -172,21 +137,6 @@ export default function claims() {
 
   return (
     <View style={style.screenMainContainer}>
-      {/* Modal independiente */}
-      {modalVisible && (
-        <View style={styles.overlayContainer}>
-          <View style={styles.modalContent}>
-            <ModalNavigator />
-            <Button
-              title="Cerrar"
-              onPress={() => {
-                setModalVisible(false);
-                setSelectedClaim(null);
-              }}
-            />
-          </View>
-        </View>
-      )}
       {/* Contenido principal */}
       <Text style={style.screenTitle}>Reclamaciónes Disponibles</Text>
       <FlatList

@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
-import { getFirestore } from "firebase/firestore";
+import { Firestore, getFirestore, doc, getDoc } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
@@ -23,6 +23,17 @@ const auth = initializeAuth(app, {
 const firestore = getFirestore(app);
 const database = getDatabase(app);
 
+// Define el tipo UserType
+type UserType = {
+  address?: string,
+  dni?: string,
+  gender?: string,
+  name?: string,
+  surnames?: string,
+  nationality?: string,
+};
+
+// Funciones
 const getCurrentUserId = () => {
   const user = auth.currentUser;
 
@@ -32,5 +43,26 @@ const getCurrentUserId = () => {
     return null;
   }
 };
+// Función para obtener los datos del usuario
+const getUserData = async (userId): Promise<UserType | null> => {
+  try {
+    if (!userId) {
+      return;
+    } else {
+      const userRef = doc(firestore, `usuarios/${userId}`);
+      const userDoc = await getDoc(userRef);
 
-export { app, auth, firestore, database, getCurrentUserId };
+      // Se cargan los datos en AsyncStorage
+      if (userDoc.exists()) {
+        return userDoc.data();
+      } else {
+        return null;
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+};
+
+export { app, auth, firestore, database, getCurrentUserId, getUserData };

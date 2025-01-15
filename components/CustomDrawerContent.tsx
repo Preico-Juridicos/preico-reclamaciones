@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Switch, Image } from "react-native";
 import {
   DrawerContentScrollView,
@@ -11,12 +11,37 @@ import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { auth } from "@api/firebase";
 import { TouchableOpacity } from "react-native-gesture-handler";
 
-import { getCurrentUserId } from "@/firebase.config";
+import { getCurrentUserId, getUserData } from "@/firebase.config";
+
+type UserType = {
+    email: string;
+    username?: string;
+    address?: string;
+    dni?: string;
+    gender?: string;
+    name?: string;
+    surnames?: string;
+    nationality?: string;
+  };
 
 export default function CustomDrawerContent(props: any) {
   const { isDarkMode, toggleTheme } = useTheme();
   const style = createStyles(isDarkMode);
   const userId = getCurrentUserId();
+  const [userData, setUserData] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+        const data = await getUserData(userId);
+        if (data) {
+            setUserData(data);
+        } else {
+            setUserData(null);
+        }
+    };
+    fetchUserData();
+    console.log(userData);
+  }, [userId]);
 
   const handleSignOut = async () => {
     try {
@@ -49,7 +74,9 @@ export default function CustomDrawerContent(props: any) {
             style={{ height: 50, width: 50 }}
             source={require("../assets/images/plogo.png")}
           />
-          <Text style={style.headerLogo}>PREICO Reclamaciones</Text>
+          <Text style={style.headerLogo}>
+            {userData?.username ? userData.username :"PREICO Reclamaciones"}
+          </Text>
         </View>
         <DrawerItemList {...props} />
       </DrawerContentScrollView>

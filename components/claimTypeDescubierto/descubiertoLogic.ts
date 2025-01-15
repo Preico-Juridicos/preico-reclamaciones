@@ -1,19 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 
 import { firestore, getCurrentUserId } from "@/firebase.config";
 import { collection, addDoc } from "firebase/firestore";
 
 // Inicializa los datos en firestore
 export const handleBankStepEvent = async (data: Record<string, any>) => {
-  const router = useRouter();
   console.log("Evento personalizado para el paso bank:", data);
-  const userId = getCurrentUserId();
-  if (!userId) {
-    console.error("No hay usuario autenticado");
-    router.push("/home");
-    return;
-  }
 
   if (data.entidadBancaria) {
     try {
@@ -22,6 +14,13 @@ export const handleBankStepEvent = async (data: Record<string, any>) => {
       if (!docRef) {
         console.error("Error al crear el documento en Firestore");
         return;
+      } else {
+        const formData = JSON.parse(
+          (await AsyncStorage.getItem("formData")) || "{}"
+        );
+        formData[docRef.id] = formData["6b"];
+        delete formData["6b"];
+        await AsyncStorage.setItem("formData", JSON.stringify(formData));
       }
     } catch (error) {
       console.error(error);

@@ -294,12 +294,12 @@ const createStyles = (isDarkMode = useTheme().isDarkMode) => {
     formMainView: {
       flex: 1,
       backgroundColor: theme.background,
-        paddingHorizontal: 20,
+      paddingHorizontal: 20,
       gap: 10,
-    //   zIndex: 10,
-    //   position: "absolute",
-    //   top: 0,
-    //   left: 0,
+      //   zIndex: 10,
+      //   position: "absolute",
+      //   top: 0,
+      //   left: 0,
     },
     formContainer: {
       flex: 1,
@@ -367,6 +367,11 @@ const createStyles = (isDarkMode = useTheme().isDarkMode) => {
     formNavigationButtonsContainer: {
       gap: 10,
       marginTop: 40,
+    },
+    formLink: {
+      color: "#4285F4",
+      fontSize: 14,
+      textDecorationLine: "underline",
     },
     // Estilos para el componente CollapsibleView
     collapsibleContainer: {
