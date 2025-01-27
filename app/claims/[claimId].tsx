@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { View, Text, Button, StyleSheet } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import createStyles from "@/assets/styles/themeStyles";
+import { useTheme } from "@/contexts/ThemeContext";
+import { PrimaryButton, SecondaryButton } from "@/components/Buttons";
 
 import { handleBankStepEvent } from "@/components/claimTypeDescubierto/descubiertoLogic";
 
@@ -52,6 +55,9 @@ const ClaimForm: React.FC = () => {
   const router = useRouter();
   const { claimId } = useLocalSearchParams<{ claimId: string }>();
 
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
+
   // Estado para los datos del formulario
   const [formData, setFormData] = useState<Record<string, Record<string, any>>>(
     {}
@@ -60,6 +66,7 @@ const ClaimForm: React.FC = () => {
   const [canContinue, setCanContinue] = useState<boolean>(true);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
   const [claimIdentifier, setClaimIdentifier] = useState<string | null>(null);
+  const [claimTitle, setClaimTitle] = useState<string | null>(null);
 
   // Mapa de pasos por tipo de claim
   const claimSteps: ClaimSteps = {
@@ -107,7 +114,29 @@ const ClaimForm: React.FC = () => {
           return updatedData;
         });
       } else {
-        console.log(data);
+        // Obtén los datos actuales de AsyncStorage
+        const currentData = await AsyncStorage.getItem("formData");
+        if (currentData) {
+          const parsedData = JSON.parse(currentData);
+
+          // Asegúrate de que claimIdentifier esté definido y sea válido
+          if (claimIdentifier) {
+            const updatedClaimData = {
+              ...parsedData[claimIdentifier],
+              ...data, // Actualiza con los nuevos datos
+            };
+
+            // Asigna los datos actualizados al identificador del claim
+            parsedData[claimIdentifier] = updatedClaimData;
+
+            // Guarda los datos actualizados en AsyncStorage
+            await AsyncStorage.setItem("formData", JSON.stringify(parsedData));
+          } else {
+            console.error("claimIdentifier no está definido.");
+          }
+        } else {
+          console.error("No se encontró ningún dato en AsyncStorage.");
+        }
       }
     } catch (error) {
       console.error("Error al actualizar los datos:", error);
@@ -127,6 +156,15 @@ const ClaimForm: React.FC = () => {
       }
     };
 
+    switch (claimId) {
+      case "descubierto":
+        setClaimTitle("Reclamación por decubierto");
+        break;
+      default:
+        setClaimTitle("Reclamación no registrada");
+        break;
+    }
+
     loadFormData();
   }, []);
 
@@ -138,12 +176,12 @@ const ClaimForm: React.FC = () => {
   };
 
   // Ir al paso siguiente basado en el índice actual
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     const currentIndex = steps.findIndex((step) => step.id === currentStepId);
 
     if (currentStep.onNext) {
-      const result = currentStep.onNext(formData[currentStepId] || {});
-      if (result) {
+      const result = await currentStep.onNext(formData[currentStepId] || {});
+      if (result !== undefined) {
         setClaimIdentifier(result); // Guardar el identificador en el estado
       }
     }
@@ -194,16 +232,18 @@ const ClaimForm: React.FC = () => {
       } else {
         console.log("No se encontró ningún dato en formData");
       }
-      console.log(getCurrentUserId());
+      //   console.log(getCurrentUserId());
     } catch (error) {
       console.error("Error al obtener formData de AsyncStorage:", error);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Reclamación: {claimId}</Text>
-      <View style={styles.stepContainer}>
+    <View style={styles.claimContainer}>
+      <Text style={[styles.screenTitle, { marginTop: 15, marginRight: 20 }]}>
+        {claimTitle}
+      </Text>
+      <View style={styles.claimStepContainer}>
         <CurrentStepComponent
           stepId={currentStepId}
           data={formData[currentStepId] || {}}
@@ -214,14 +254,14 @@ const ClaimForm: React.FC = () => {
       </View>
 
       {/* Botones de navegación */}
-      <View style={styles.buttonContainer}>
+      <View style={styles.claimButtonContainer}>
         {steps.findIndex((step) => step.id === currentStepId) > 0 && (
-          <Button title="Anterior" onPress={handlePrevStep} />
+          <SecondaryButton title="Anterior" onPress={handlePrevStep} />
         )}
-        <Button title="consola" onPress={logStoredData} />
-        <Button title="clean formData" onPress={cleanStoredData} />
+        <PrimaryButton title="consola" onPress={logStoredData} />
+        <SecondaryButton title="clean formData" onPress={cleanStoredData} />
         {!currentStep.isBranching && (
-          <Button
+          <PrimaryButton
             title={
               steps.findIndex((step) => step.id === currentStepId) <
               steps.length - 1
@@ -238,28 +278,3 @@ const ClaimForm: React.FC = () => {
 };
 
 export default ClaimForm;
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  stepContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
-});
-

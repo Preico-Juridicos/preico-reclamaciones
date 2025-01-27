@@ -17,7 +17,12 @@ import createStyles from "@/assets/styles/themeStyles";
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
-  updateData: (stepId: string, data: Record<string, any>) => void;
+
+  updateData: (
+    stepId: string,
+    data: Record<string, any>,
+    isInFireBase: boolean
+  ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
 };
@@ -52,6 +57,7 @@ const StepComisiones: React.FC<StepComponentProps> = ({
         acc + (isNaN(parseFloat(curr.importe)) ? 0 : parseFloat(curr.importe)),
       0
     );
+    updateData(stepId, { ...data, comisiones: comisiones }, true);
     setTotal(suma);
   };
 
@@ -94,7 +100,6 @@ const StepComisiones: React.FC<StepComponentProps> = ({
         enableReinitialize
         validationSchema={validationSchema}
         onSubmit={(values) => {
-          updateData(stepId, { ...data, comisiones: values.comisiones });
           goToStep("10");
         }}
       >
@@ -157,11 +162,7 @@ const StepComisiones: React.FC<StepComponentProps> = ({
                               mode="date"
                               date={selectedDate}
                               onConfirm={(date) => {
-                                handleDateConfirm(
-                                  index,
-                                  date,
-                                  setFieldValue
-                                );
+                                handleDateConfirm(index, date, setFieldValue);
                                 setIsDatePickerVisible(false);
                               }}
                               onCancel={() => setIsDatePickerVisible(false)}
@@ -171,7 +172,10 @@ const StepComisiones: React.FC<StepComponentProps> = ({
                           <TextInput
                             style={[pageStyles.inputSmall, { flex: 1 }]}
                             onChangeText={(text) =>
-                              setFieldValue(`comisiones[${index}].importe`, text)
+                              setFieldValue(
+                                `comisiones[${index}].importe`,
+                                text
+                              )
                             }
                             value={comision.importe}
                             placeholder="Importe"
@@ -181,7 +185,10 @@ const StepComisiones: React.FC<StepComponentProps> = ({
                           {values.comisiones.length > 1 && (
                             <TouchableOpacity
                               onPress={() => remove(index)}
-                              style={[pageStyles.removeButtonSmall, { flex: 0.5 }]}
+                              style={[
+                                pageStyles.removeButtonSmall,
+                                { flex: 0.5 },
+                              ]}
                             >
                               <Text style={pageStyles.removeText}>-</Text>
                             </TouchableOpacity>

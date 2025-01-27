@@ -289,6 +289,29 @@ const createStyles = (isDarkMode = useTheme().isDarkMode) => {
       marginTop: 4,
       textAlign: "center",
     },
+    claimContainer: {
+      flex: 1,
+      padding: 20,
+      justifyContent: "center",
+      backgroundColor: theme.background,
+    },
+    claimTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      marginBottom: 20,
+      textAlign: "center",
+    },
+    claimStepContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
+    claimButtonContainer: {
+      flexDirection: "row",
+      justifyContent: "flex-end",
+      gap: 10,
+      marginTop: 20,
+    },
 
     // Estilos para el formulario de descubierto
     formMainView: {

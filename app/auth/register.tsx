@@ -9,7 +9,7 @@ import {
   import { useState } from "react";
   import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
   import { app } from "@/firebase.config";
-  import { getFirestore, doc, setDoc } from "firebase/firestore";
+  import { getFirestore, doc, setDoc, collection } from "firebase/firestore";
   import { useNavigation } from "expo-router";
   import { useTheme } from "@/contexts/ThemeContext";
   import createStyles from "@/assets/styles/themeStyles";
@@ -49,7 +49,19 @@ import {
           createdAt: new Date().toISOString(),
         });
   
-        console.log("Usuario registrado:", user.email);
+        // Crear colección "configuraciones" dentro del usuario
+        const userConfigRef = collection(db, `usuarios/${user.uid}/configuraciones`);
+        await setDoc(doc(userConfigRef, "privacidad"), {
+          analyticsConsent: false,
+          marketingConsent: false,
+          functionalConsent: false,
+          deleteRequest: false,
+          deleteRequestDate: null,
+          notificationsEnabled: true,
+          showUserName: true,
+        });
+  
+        console.log("Usuario registrado y configuraciones creadas:", user.email);
         Alert.alert("Registro exitoso", "Usuario creado correctamente");
         // navigation.navigate("auth/login");
       } catch (error) {
@@ -116,4 +128,3 @@ import {
       </View>
     );
   }
-  

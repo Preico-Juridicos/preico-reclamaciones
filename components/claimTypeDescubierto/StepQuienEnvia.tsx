@@ -37,7 +37,7 @@ const StepQuienEnvia: React.FC<StepComponentProps> = ({
 //   }, [currentStep, updateStep]);
 
 const handleNext = () => {
-    updateData(stepId, { ...data, selectedOption: "A" });
+    // updateData(stepId, { ...data, selectedOption: "A" });
     goToStep("11");
 };
 //   const handleNext = () => {

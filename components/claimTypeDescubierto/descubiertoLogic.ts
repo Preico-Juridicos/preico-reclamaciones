@@ -10,7 +10,7 @@ export const handleBankStepEvent = async (data: Record<string, any>) => {
   if (data.entidadBancaria) {
     try {
       const docRef = await initDataToFirestore(data.entidadBancaria);
-      console.log(docRef);
+      //   console.log(docRef);
       if (!docRef) {
         console.error("Error al crear el documento en Firestore");
         return;
@@ -21,6 +21,8 @@ export const handleBankStepEvent = async (data: Record<string, any>) => {
         formData[docRef.id] = formData["6b"];
         delete formData["6b"];
         await AsyncStorage.setItem("formData", JSON.stringify(formData));
+
+        return docRef.id;
       }
     } catch (error) {
       console.error(error);

@@ -1,17 +1,46 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import { useNavigation } from "expo-router";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useTheme } from "@/contexts/ThemeContext";
 import createStyles from "@/assets/styles/themeStyles";
+import { getCurrentUserId, getUserData } from "@/firebase.config";
 
 const homeImage = require("@/assets/images/homepick.jpg");
 
+type UserType = {
+  email: string;
+  username?: string;
+  address?: string;
+  dni?: string;
+  gender?: string;
+  name?: string;
+  surnames?: string;
+  nationality?: string;
+};
 export default function home() {
   const { isDarkMode } = useTheme();
   const style = createStyles(isDarkMode);
   const navigation = useNavigation();
+  const userId = getCurrentUserId();
+  const [userData, setUserData] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (userId) {
+        const data = await getUserData(userId);
+        if (data) {
+          setUserData(data);
+        } else {
+          setUserData(null);
+        }
+      } else {
+        setUserData(null);
+      }
+    };
+    fetchUserData();
+  }, [userId]);
 
   const navigateToClaims = () => {
     navigation.navigate("claims");
@@ -64,7 +93,12 @@ export default function home() {
   return (
     <View style={style.screenMainContainer}>
       <View>
-        <Text style={style.screenTitle}>PRECIO Reclamaciones</Text>
+        <Text style={style.screenTitle}>
+          {}
+          {userData && userData.username != undefined
+            ? "Hola, " + userData.username
+            : "PREICO Reclamaciones"}
+        </Text>
         <Image source={homeImage} style={localStyles.headerImage} />
       </View>
       <View style={localStyles.contentContainer}>

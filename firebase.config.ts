@@ -25,12 +25,14 @@ const database = getDatabase(app);
 
 // Define el tipo UserType
 type UserType = {
-  address?: string,
-  dni?: string,
-  gender?: string,
-  name?: string,
-  surnames?: string,
-  nationality?: string,
+  email: string;
+  username?: string;
+  address?: string;
+  dni?: string;
+  gender?: string;
+  name?: string;
+  surnames?: string;
+  nationality?: string;
 };
 
 // Funciones
@@ -44,17 +46,17 @@ const getCurrentUserId = () => {
   }
 };
 // Función para obtener los datos del usuario
-const getUserData = async (userId): Promise<UserType | null> => {
+const getUserData = async (userId: string): Promise<UserType | null> => {
   try {
     if (!userId) {
-      return;
+      return null;
     } else {
       const userRef = doc(firestore, `usuarios/${userId}`);
       const userDoc = await getDoc(userRef);
 
       // Se cargan los datos en AsyncStorage
       if (userDoc.exists()) {
-        return userDoc.data();
+        return userDoc.data() as UserType;
       } else {
         return null;
       }

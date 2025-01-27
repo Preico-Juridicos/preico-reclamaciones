@@ -264,6 +264,13 @@ function LayoutContent() {
             headerShown: false,
           }}
         />
+         <Drawer.Screen
+          name="claims/[claimId]"
+          options={{
+            drawerItemStyle: { display: "none" },
+            headerShown: false,
+          }}
+        />
       </Drawer>
     );
   }
