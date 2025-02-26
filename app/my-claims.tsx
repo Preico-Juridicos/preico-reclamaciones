@@ -1,97 +1,92 @@
-import React, { useEffect, useState } from "react";
-import { useNavigation } from "expo-router";
+import React, { useEffect, useState, useCallback } from "react";
+import { useRouter } from "expo-router";
 import createStyles from "@/assets/styles/themeStyles";
 import { useTheme } from "@/contexts/ThemeContext";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
-import { FlatList } from "react-native-gesture-handler";
+import { View, Text, TouchableOpacity, Image, FlatList, RefreshControl } from "react-native";
 import { firestore } from "@/firebase.config";
 import { collection, getDocs, doc, getDoc } from "firebase/firestore";
 import { getCurrentUserId } from "@/api/firebase";
 import { Claim } from "@/models/claims";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function myclaims() {
-  const navigation = useNavigation();
+export default function MyClaims() {
+  const router = useRouter();
   const { isDarkMode } = useTheme();
   const style = createStyles(isDarkMode);
 
   const [myClaims, setMyClaims] = useState<Claim[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const fetchClaims = async () => {
-      try {
-        const reclamacionesRef = collection(firestore, `tipos_reclamacion`);
-        const querySnapshot = await getDocs(reclamacionesRef);
+  const fetchClaims = useCallback(async () => {
+    try {
+      const userId = await getCurrentUserId();
+      const reclamacionesRef = collection(firestore, `usuarios/${userId}/reclamaciones`);
+      const querySnapshot = await getDocs(reclamacionesRef);
 
-        if (querySnapshot.empty) {
-          setMyClaims([]);
-          return;
-        }
-
-        const claimsSnapshot = await Promise.all(
-          querySnapshot.docs.map(async (claim) => {
-            let fecha_reclamacion = new Date();
-            if (claim.data().fecha_reclamacion) {
-              fecha_reclamacion = new Date(
-                claim.data().fecha_reclamacion.seconds * 1000
-              );
-              fecha_reclamacion.setMilliseconds(
-                claim.data().fecha_reclamacion.nanoseconds / 1e6
-              );
-            }
-            const bancoRef = doc(
-              firestore,
-              "bancos",
-              claim.data().entidadBancaria
-            );
-            let banco = await getDoc(bancoRef);
-            return {
-              id: claim.id,
-              entidadBancaria: claim.data().entidadBancaria,
-              dni: claim.data().dni,
-              tipo: claim.data().tipo,
-              currentStep: claim.data().currentStep ?? null,
-              fecha_reclamacion: fecha_reclamacion,
-              logo: banco?.data()?.banco_logo ?? null,
-            };
-          })
-        );
-        setMyClaims(claimsSnapshot);
-      } catch (error) {
-        console.log("Error al obtener las reclamaciones:", error);
+      if (querySnapshot.empty) {
+        setMyClaims([]);
+        return;
       }
-    };
 
-    fetchClaims();
+      const claimsSnapshot = await Promise.all(
+        querySnapshot.docs.map(async (claim) => {
+          let fecha_reclamacion = new Date();
+          if (claim.data().fecha_reclamacion) {
+            fecha_reclamacion = new Date(claim.data().fecha_reclamacion.seconds * 1000);
+            fecha_reclamacion.setMilliseconds(claim.data().fecha_reclamacion.nanoseconds / 1e6);
+          }
+
+          const bancoRef = doc(firestore, "bancos", claim.data().entidadBancaria);
+          const banco = await getDoc(bancoRef);
+          const bancoNombre = banco.exists()
+            ? banco.data().banco_nombre_comercial || banco.data().banco_nombre
+            : "";
+
+          return {
+            id: claim.id,
+            entidadBancaria: claim.data().entidadBancaria,
+            dni: claim.data().dni,
+            tipo: claim.data().tipo,
+            currentStep: claim.data().currentStep ?? null,
+            fecha_reclamacion,
+            logo: banco.data()?.banco_logo ?? null,
+            banco_nombre: bancoNombre,
+          };
+        })
+      );
+
+      setMyClaims(claimsSnapshot);
+    } catch (error) {
+      console.log("Error al obtener las reclamaciones:", error);
+    }
   }, []);
 
-  const handlePress = (claim: Claim) => {
-    const claimId = claim.id;
-    const currentStep = claim.currentStep;
-    const currentRoute =
-      navigation.getState().routes[navigation.getState().index];
+  useEffect(() => {
+    fetchClaims();
+  }, [fetchClaims]);
 
-    switch (currentRoute.name) {
-      // Implementar lógica de navegación según sea necesario
-    }
+  const onRefresh = useCallback(() => {
+    console.log("Refreshing...");
+    setRefreshing(true);
+    fetchClaims().finally(() => setRefreshing(false));
+  }, [fetchClaims]);
+
+  const handlePress = (claim: Claim) => {
+    router.push({
+      pathname: `/claims/${claim.tipo}`,
+      params: { claimCode: claim.id, claimStep: claim.currentStep },
+    });
   };
 
   const renderCard = ({ item }: { item: Claim }) => (
-    <TouchableOpacity
-      key={item.id}
-      style={styles.card}
-      onPress={() => handlePress(item)}
-    >
-      {item.logo && <Image source={{ uri: item.logo }} style={styles.image} />}
-      <View style={styles.textContainer}>
-        <Text style={styles.cardText}>
-          {(item.tipo ?? "").toString().charAt(0).toUpperCase() +
-            (item.tipo ?? "").toString().slice(1)}{" "}
-          ({item.entidadBancaria})
+    <TouchableOpacity style={style.myClaimCardContainer} onPress={() => handlePress(item)}>
+      {item.logo && <Image source={{ uri: item.logo }} style={style.myClaimLogo} />}
+      <View style={style.myClaimCardTextContainer}>
+        <Text style={style.myClaimCardText}>
+          {(item.tipo ?? "").charAt(0).toUpperCase() + (item.tipo ?? "").slice(1)} a {item.banco_nombre}
         </Text>
-        <Text style={styles.dateText}>
-          {item.fecha_reclamacion
-            ? item.fecha_reclamacion.toLocaleDateString()
-            : "Fecha no disponible"}
+        <Text style={style.myClaimCardDateText}>
+          {item.fecha_reclamacion ? item.fecha_reclamacion.toLocaleDateString() : "Fecha no disponible"}
         </Text>
       </View>
     </TouchableOpacity>
@@ -100,62 +95,19 @@ export default function myclaims() {
   return (
     <View style={style.screenMainContainer}>
       <Text style={style.screenTitle}>Mis Reclamaciones</Text>
-      {myClaims.length > 0 ? (
-        <FlatList
-          data={myClaims}
-          renderItem={renderCard}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={style.ScreenContentWrapper}
-        />
-      ) : (
-        <Text style={style.formError}>Aún no tienes reclamaciones</Text>
-      )}
+      <SafeAreaView style={{ flex: 1 }}>
+        {myClaims.length > 0 ? (
+          <FlatList
+            data={myClaims}
+            renderItem={renderCard}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={style.ScreenContentWrapper}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          />
+        ) : (
+          <Text style={style.formError}>Aún no tienes reclamaciones</Text>
+        )}
+      </SafeAreaView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 10,
-  },
-  card: {
-    maxWidth: 375,
-    height: 100,
-    marginVertical: 10,
-    padding: 15,
-    backgroundColor: "#ffefdb",
-    borderRadius: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  image: {
-    width: 50,
-    height: 50,
-    marginRight: 15,
-    borderRadius: 10,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  cardText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  dateText: {
-    fontSize: 14,
-    color: "#777",
-  },
-  noClaimsText: {
-    fontSize: 16,
-    color: "#ff4d4d",
-    textAlign: "center",
-    marginTop: 20,
-  },
-});

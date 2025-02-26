@@ -10,12 +10,17 @@ import createStyles from "@/assets/styles/themeStyles";
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
-  updateData: (stepId: string, data: Record<string, any>) => void;
+  updateData: (
+    stepId: string,
+    data: Record<string, any>,
+    isInFireBase: boolean
+  ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
+  claimCode?: string;
 };
 
-const getUserInfo = async (docId) => {
+const getUserInfo = async (docId: any) => {
   const usuarioRef = doc(firestore, "usuarios", docId);
 
   try {
@@ -41,6 +46,7 @@ const StepDNI: React.FC<StepComponentProps> = ({
   updateData,
   goToStep,
   setCanContinue,
+  claimCode,
 }) => {
   const { isDarkMode } = useTheme();
   const styles = createStyles(isDarkMode);
@@ -51,7 +57,6 @@ const StepDNI: React.FC<StepComponentProps> = ({
     dni: "",
   });
 
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -59,21 +64,52 @@ const StepDNI: React.FC<StepComponentProps> = ({
         if (data !== null) {
           const formData = JSON.parse(data);
           const userId = getCurrentUserId();
-          const { dni, nombreCompleto } = await getUserInfo(userId);
+          if (userId) {
+            const userInfo = await getUserInfo(userId);
+            // console.log(userInfo);
+            if (userInfo) {
+              const { dni, nombreCompleto } = userInfo;
+              setUserData({ userId, nombreCompleto, dni });
+              const currentData = claimCode ? formData[claimCode] || [] : [];
+              const updatedValue = Array.isArray(currentData)
+                ? [...currentData, dni, nombreCompleto] // Si es un array, añade los valores al array
+                : { ...currentData, dni, nombreCompleto }; // Si es un objeto, fusiona los objetos
 
-          setUserData({ userId, nombreCompleto, dni });
-          const reclamacionIdKey = Object.keys(formData)[1];
+              const updatedData = {
+                ...formData,
+                [claimCode || "defaultClaimCode"]: updatedValue,
+              };
+              await AsyncStorage.setItem(
+                "formData",
+                JSON.stringify(updatedData)
+              );
+            //   console.log("control");
+            //   console.log({
+            //     ...currentData,
+            //     dni: dni,
+            //     nombreCompleto: nombreCompleto,
+            //   });
+              updateData(
+                stepId,
+                { ...currentData, dni: dni, nombreCompleto: nombreCompleto },
+                true
+              );
+            }
+          }
 
-          const currentData = formData[reclamacionIdKey] || [];
-          const updatedValue = Array.isArray(currentData)
-            ? [...currentData, { dni, nombreCompleto }] // Si es un array, añade los valores al array
-            : { ...currentData, ...{ dni, nombreCompleto } }; // Si es un objeto, fusiona los objetos
+          //   setUserData({ userId, nombreCompleto, dni });
+          //   const reclamacionIdKey = Object.keys(formData)[1];
 
-          const updatedData = {
-            ...formData,
-            [reclamacionIdKey]: updatedValue,
-          };
-          await AsyncStorage.setItem("formData", JSON.stringify(updatedData));
+          //   const currentData = formData[reclamacionIdKey] || [];
+          //   const updatedValue = Array.isArray(currentData)
+          //     ? [...currentData, { dni, nombreCompleto }] // Si es un array, añade los valores al array
+          //     : { ...currentData, ...{ dni, nombreCompleto } }; // Si es un objeto, fusiona los objetos
+
+          //   const updatedData = {
+          //     ...formData,
+          //     [reclamacionIdKey]: updatedValue,
+          //   };
+          //   await AsyncStorage.setItem("formData", JSON.stringify(updatedData));
         }
       } catch (error) {
         console.error(error);
@@ -82,13 +118,14 @@ const StepDNI: React.FC<StepComponentProps> = ({
 
     fetchData();
   }, []);
-//   const handleNextStep = () => {
-//     navigation.navigate("StepConfirmarDireccion");
-//   };
+  //   const handleNextStep = () => {
+  //     navigation.navigate("StepConfirmarDireccion");
+  //   };
   const handlePreviousStep = () => {
-    updateData(stepId, { ...data, reScanDNI: true });
+    //     updateData(stepId, { ...data, reScanDNI: true });
     goToStep("11");
   };
+
   return (
     <ScrollView style={styles.formContainer}>
       <Text style={styles.formTitle}>

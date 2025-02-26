@@ -24,7 +24,11 @@ import { PrimaryButton, SecondaryButton } from "../Buttons";
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
-  updateData: (stepId: string, data: Record<string, any>) => void;
+  updateData: (
+    stepId: string,
+    data: Record<string, any>,
+    isInFireBase: boolean
+  ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
 };

@@ -6,10 +6,14 @@ import { useTheme } from "@/contexts/ThemeContext";
 import createStyles from "@/assets/styles/themeStyles";
 
 type StepComponentProps = {
-  stepId: string,
-  data: Record<string, any>,
-  updateData: (stepId: string, data: Record<string, any>) => void,
-  goToStep: (stepId: string) => void,
+  stepId: string;
+  data: Record<string, any>;
+  updateData: (
+    stepId: string,
+    data: Record<string, any>,
+    isInFireBase: boolean
+  ) => void;
+  goToStep: (stepId: string) => void;
 };
 
 const StepSolicitarMovimientos: React.FC<StepComponentProps> = ({

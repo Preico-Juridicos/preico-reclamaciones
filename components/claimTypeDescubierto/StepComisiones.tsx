@@ -7,17 +7,20 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from "react-native";
-import { Formik, FieldArray } from "formik";
-import * as Yup from "yup";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { format } from "date-fns";
 import { useTheme } from "@/contexts/ThemeContext";
 import createStyles from "@/assets/styles/themeStyles";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-type StepComponentProps = {
+interface Comision {
+  fecha: string;
+  importe: string;
+}
+
+interface StepComisionesProps {
   stepId: string;
-  data: Record<string, any>;
-
+  data: { comisiones?: Comision[] };
   updateData: (
     stepId: string,
     data: Record<string, any>,
@@ -25,67 +28,88 @@ type StepComponentProps = {
   ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
-};
+  claimCode?: string;
+}
 
-const StepComisiones: React.FC<StepComponentProps> = ({
+const StepComisiones: React.FC<StepComisionesProps> = ({
   stepId,
   data,
   updateData,
   goToStep,
   setCanContinue,
+  claimCode,
 }) => {
   const { isDarkMode } = useTheme();
   const styles = createStyles(isDarkMode);
 
-  const [total, setTotal] = useState(0);
-  const [openDatePickerIndex, setOpenDatePickerIndex] = useState<number | null>(
-    null
+  const [comisiones, setComisiones] = useState<Comision[]>(
+    data.comisiones || [{ fecha: "", importe: "" }]
   );
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [total, setTotal] = useState<number>(0);
+  const [isDatePickerVisible, setIsDatePickerVisible] =
+    useState<boolean>(false);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   useEffect(() => {
+    // console.log(comisiones);
     setCanContinue(false);
-    if (data.comisiones && data.comisiones.length > 0) {
-      updateTotal(data.comisiones);
-    }
-  }, [data.comisiones, setCanContinue]);
+    updateTotal(comisiones);
+  }, [comisiones]);
 
-  const updateTotal = (comisiones: any[]) => {
+  useEffect(() => {
+    const loadStoredComisiones = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem("formData");
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          if (claimCode && parsedData[claimCode]?.comisiones) {
+            setComisiones(parsedData[claimCode].comisiones);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading comisiones from AsyncStorage", error);
+      }
+    };
+
+    loadStoredComisiones();
+  }, [claimCode]);
+
+  const updateTotal = (comisiones: Comision[]) => {
     const suma = comisiones.reduce(
-      (acc, curr) =>
-        acc + (isNaN(parseFloat(curr.importe)) ? 0 : parseFloat(curr.importe)),
+      (acc, curr) => acc + (parseFloat(curr.importe) || 0),
       0
     );
-    updateData(stepId, { ...data, comisiones: comisiones }, true);
     setTotal(suma);
+    updateData(stepId, { ...data, comisiones }, true);
+    setCanContinue(comisiones.every((com) => com.fecha && com.importe));
   };
 
-  const validationSchema = Yup.object().shape({
-    comisiones: Yup.array().of(
-      Yup.object().shape({
-        fecha: Yup.string()
-          .matches(
-            /^\d{4}-\d{2}-\d{2}$/,
-            "Formato de fecha inválido (YYYY-MM-DD)"
-          )
-          .required("Fecha es requerida"),
-        importe: Yup.number()
-          .typeError("Debe ser un número")
-          .positive("Debe ser un número positivo")
-          .required("Importe es requerido"),
-      })
-    ),
-  });
+  const handleDateConfirm = (date: Date) => {
+    if (selectedIndex !== null) {
+      const updatedComisiones = [...comisiones];
+      updatedComisiones[selectedIndex].fecha = format(date, "yyyy-MM-dd");
+      setComisiones(updatedComisiones);
+    }
+    setIsDatePickerVisible(false);
+  };
 
-  const handleDateConfirm = (
+  const handleInputChange = (
     index: number,
-    date: Date,
-    setFieldValue: (field: string, value: any) => void
+    field: keyof Comision,
+    value: string
   ) => {
-    const formattedDate = format(date, "yyyy-MM-dd");
-    setFieldValue(`comisiones[${index}].fecha`, formattedDate);
-    setOpenDatePickerIndex(null);
+    const updatedComisiones = [...comisiones];
+    updatedComisiones[index][field] = value;
+    setComisiones(updatedComisiones);
+  };
+
+  const addComision = () => {
+    setComisiones([...comisiones, { fecha: "", importe: "" }]);
+  };
+
+  const removeComision = (index: number) => {
+    const updatedComisiones = comisiones.filter((_, i) => i !== index);
+    setComisiones(updatedComisiones);
   };
 
   return (
@@ -93,128 +117,62 @@ const StepComisiones: React.FC<StepComponentProps> = ({
       <Text style={styles.formTitle}>
         Añade los cargos y fechas de las comisiones
       </Text>
-      <Formik
-        initialValues={{
-          comisiones: data.comisiones || [{ fecha: "", importe: "" }],
-        }}
-        enableReinitialize
-        validationSchema={validationSchema}
-        onSubmit={(values) => {
-          goToStep("10");
-        }}
-      >
-        {({
-          values,
-          handleChange,
-          handleBlur,
-          handleSubmit,
-          errors,
-          touched,
-          setFieldValue,
-        }) => {
-          useEffect(() => {
-            if (values.comisiones && values.comisiones.length > 0) {
-              updateTotal(values.comisiones);
-              const allFieldsValid = values.comisiones.every(
-                (comision) => comision.fecha && comision.importe
-              );
-              setCanContinue(allFieldsValid);
-            }
-          }, [values.comisiones, setCanContinue]);
+      {comisiones.map((comision, index) => (
+        <View key={index} style={[pageStyles.comisionRow, { width: "100%" }]}>
+          <TouchableOpacity
+            style={[pageStyles.dateButton, { flex: 1 }]}
+            onPress={() => {
+              setSelectedIndex(index);
+              setIsDatePickerVisible(true);
+            }}
+          >
+            <Text
+              style={
+                comision.fecha
+                  ? pageStyles.dateText
+                  : pageStyles.placeholderText
+              }
+            >
+              {comision.fecha || "Fecha"}
+            </Text>
+          </TouchableOpacity>
 
-          return (
-            <>
-              <FieldArray name="comisiones">
-                {({ push, remove }) => (
-                  <View>
-                    {values.comisiones &&
-                      values.comisiones.map((comision, index) => (
-                        <View
-                          key={index}
-                          style={[pageStyles.comisionRow, { width: "100%" }]}
-                        >
-                          <TouchableOpacity
-                            style={[pageStyles.dateButton, { flex: 1 }]}
-                            onPress={() => {
-                              setOpenDatePickerIndex(index);
-                              setSelectedDate(
-                                comision.fecha
-                                  ? new Date(comision.fecha)
-                                  : new Date()
-                              );
-                              setIsDatePickerVisible(true);
-                            }}
-                          >
-                            <Text
-                              style={
-                                comision.fecha
-                                  ? pageStyles.dateText
-                                  : pageStyles.placeholderText
-                              }
-                            >
-                              {comision.fecha || "Fecha"}
-                            </Text>
-                          </TouchableOpacity>
+          <TextInput
+            style={[pageStyles.inputSmall, { flex: 1 }]}
+            onChangeText={(text) => handleInputChange(index, "importe", text)}
+            value={comision.importe}
+            placeholder="Importe"
+            keyboardType="numeric"
+          />
 
-                          {openDatePickerIndex === index && (
-                            <DateTimePickerModal
-                              isVisible={isDatePickerVisible}
-                              mode="date"
-                              date={selectedDate}
-                              onConfirm={(date) => {
-                                handleDateConfirm(index, date, setFieldValue);
-                                setIsDatePickerVisible(false);
-                              }}
-                              onCancel={() => setIsDatePickerVisible(false)}
-                            />
-                          )}
+          {comisiones.length > 1 && (
+            <TouchableOpacity
+              onPress={() => removeComision(index)}
+              style={[pageStyles.removeButtonSmall, { flex: 0.5 }]}
+            >
+              <Text style={pageStyles.removeText}>-</Text>
+            </TouchableOpacity>
+          )}
 
-                          <TextInput
-                            style={[pageStyles.inputSmall, { flex: 1 }]}
-                            onChangeText={(text) =>
-                              setFieldValue(
-                                `comisiones[${index}].importe`,
-                                text
-                              )
-                            }
-                            value={comision.importe}
-                            placeholder="Importe"
-                            keyboardType="numeric"
-                          />
+          {index === comisiones.length - 1 && (
+            <TouchableOpacity
+              onPress={addComision}
+              style={[pageStyles.addButtonSmall, { flex: 0.5 }]}
+            >
+              <Text style={pageStyles.addText}>+</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      ))}
 
-                          {values.comisiones.length > 1 && (
-                            <TouchableOpacity
-                              onPress={() => remove(index)}
-                              style={[
-                                pageStyles.removeButtonSmall,
-                                { flex: 0.5 },
-                              ]}
-                            >
-                              <Text style={pageStyles.removeText}>-</Text>
-                            </TouchableOpacity>
-                          )}
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={handleDateConfirm}
+        onCancel={() => setIsDatePickerVisible(false)}
+      />
 
-                          {index === values.comisiones.length - 1 && (
-                            <TouchableOpacity
-                              onPress={() => push({ fecha: "", importe: "" })}
-                              style={[pageStyles.addButtonSmall, { flex: 0.5 }]}
-                            >
-                              <Text style={pageStyles.addText}>+</Text>
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                      ))}
-                  </View>
-                )}
-              </FieldArray>
-
-              <Text style={pageStyles.total}>
-                Total Importes: {total.toFixed(2)} €
-              </Text>
-            </>
-          );
-        }}
-      </Formik>
+      <Text style={pageStyles.total}>Total Importes: {total.toFixed(2)} €</Text>
     </ScrollView>
   );
 };

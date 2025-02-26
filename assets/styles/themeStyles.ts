@@ -125,6 +125,17 @@ const createStyles = (isDarkMode = useTheme().isDarkMode) => {
       textAlign: "center",
       fontWeight: "400",
     },
+    buttonDisabled: {
+      backgroundColor: "#ccc",
+      paddingVertical: 10,
+      paddingHorizontal: 15,
+      borderRadius: 5,
+    },
+    buttonTextDisabled: {
+      color: "#666",
+      textAlign: "center",
+      fontWeight: "600",
+    },
 
     // Drawer Principal
     drawerContainer: {
@@ -313,6 +324,60 @@ const createStyles = (isDarkMode = useTheme().isDarkMode) => {
       marginTop: 20,
     },
 
+    // My Claims
+    myClaimCardContainer: {
+      flex: 1,
+      marginTop: 0,
+      backgroundColor: theme.card,
+      padding: 15,
+      borderRadius: 10,
+      borderColor: theme.borderColor,
+      borderWidth: 1,
+      elevation: 3,
+      flexDirection: "row",
+      gap: 10,
+      marginVertical: 10,
+    },
+    myClaimCard: {
+      maxWidth: 375,
+      height: 100,
+      marginVertical: 10,
+      padding: 15,
+      backgroundColor: "#ffefdb",
+      borderRadius: 10,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 5,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    myClaimLogo: {
+      width: 50,
+      height: 50,
+      marginRight: 15,
+      borderRadius: 10,
+    },
+    myClaimCardTextContainer: {
+      flex: 1,
+    },
+    myClaimCardText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#333",
+    },
+    myClaimCardDateText: {
+      fontSize: 14,
+      color: "#777",
+    },
+    noClaimsText: {
+      fontSize: 16,
+      color: "#ff4d4d",
+      textAlign: "center",
+      marginTop: 20,
+    },
+
     // Estilos para el formulario de descubierto
     formMainView: {
       flex: 1,
@@ -433,9 +498,9 @@ const createStyles = (isDarkMode = useTheme().isDarkMode) => {
     // Estilos para el componente deplegable de bancos
     dropdownContainer: {
       borderWidth: 1,
-      borderColor: theme.background,
+      borderColor: theme.backgroundColorHighlight,
       borderRadius: 8,
-      backgroundColor: theme.background,
+      backgroundColor: theme.backgroundColorHighlight,
       paddingHorizontal: 10,
       paddingVertical: 10,
     },

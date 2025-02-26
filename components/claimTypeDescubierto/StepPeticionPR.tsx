@@ -11,7 +11,11 @@ import { firestore, getCurrentUserId } from "@/firebase.config";
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
-  updateData: (stepId: string, data: Record<string, any>) => void;
+  updateData: (
+    stepId: string,
+    data: Record<string, any>,
+    isInFireBase: boolean
+  ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
 };
@@ -43,11 +47,11 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
     fetchData();
   }, []);
 
-  useEffect(() => {
-    if (currentStep !== 13) {
-      updateStep(13);
-    }
-  }, [currentStep, updateStep]);
+//   useEffect(() => {
+//     if (currentStep !== 13) {
+//       updateStep(13);
+//     }
+//   }, [currentStep, updateStep]);
 
   const handleSubmitPN = async () => {
     try {
@@ -153,7 +157,7 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
       <View style={{ gap: 10, marginTop: 10 }}>
         <PrimaryButton onPress={handleSubmitPN} title="Enviame la petición" />
         <SecondaryButton title="Mejor Luego" onPress={handleGoHome} />
-        <SecondaryButton title="Atrás" onPress={() => navigation.goBack()} />
+        {/* <SecondaryButton title="Atrás" onPress={() => navigation.goBack()} /> */}
       </View>
     </ScrollView>
   );

@@ -33,6 +33,9 @@ type UserType = {
   name?: string;
   surnames?: string;
   nationality?: string;
+  whoSends?: string;
+  hasPR?: boolean;
+  hasPN?: boolean;
 };
 
 // Funciones

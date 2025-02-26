@@ -5,8 +5,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import createStyles from "@/assets/styles/themeStyles";
 import { useTheme } from "@/contexts/ThemeContext";
 import { PrimaryButton, SecondaryButton } from "@/components/Buttons";
+import { useFocusEffect } from "@react-navigation/native";
 
-import { handleBankStepEvent } from "@/components/claimTypeDescubierto/descubiertoLogic";
+import {
+  handleBankStepEvent,
+  handleComisionesStepEvent,
+  handleNumeroCuentaStepEvent,
+  handleDNIStepEvent,
+  handleConfirmarDireccionStepEvent,
+  handleQuienEnviaStepEvent,
+} from "@/components/claimTypeDescubierto/descubiertoLogic";
 
 // Componente de Descubierto
 import StepQueEs from "@/components/claimTypeDescubierto/StepQueEs";
@@ -27,23 +35,52 @@ import StepRevisionDocumentos from "@/components/claimTypeDescubierto/StepRevisi
 import StepPeticionPR from "@/components/claimTypeDescubierto/StepPeticionPR";
 import StepGenerarDocumentos from "@/components/claimTypeDescubierto/StepGenerarDocumentos";
 import Summary from "@/components/claimTypeDescubierto/Summary";
-import { getCurrentUserId } from "@/firebase.config";
+import { getCurrentUserId, firestore } from "@/firebase.config";
+import { doc, getDoc } from "firebase/firestore";
+import claims from "@/claims";
+
+const loadClaimDataFromFirebase = async (claimCode: string) => {
+  try {
+    const userId = getCurrentUserId();
+
+    const claimRef = doc(
+      firestore,
+      `usuarios/${userId}/reclamaciones/${claimCode}`
+    );
+    const claimSnap = await getDoc(claimRef);
+
+    if (claimSnap.exists()) {
+      return { [claimCode]: claimSnap.data() };
+    } else {
+      console.log("No se encontraron datos para este claimCode.");
+      return null;
+    }
+  } catch (error) {
+    console.error("Error al cargar datos desde Firebase:", error);
+    return null;
+  }
+};
 
 // Tipos
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
   claimIdentifier?: string;
-  updateData: (stepId: string, data: Record<string, any>) => void;
+  updateData: (
+    stepId: string,
+    data: Record<string, any>,
+    isInFireBase: boolean
+  ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
+  claimCode?: string | undefined;
 };
 
 type Step = {
   id: string;
   component: React.ComponentType<StepComponentProps>;
   isBranching?: boolean;
-  onNext?: (data: Record<string, any>) => void;
+  onNext?: (data: Record<string, any>, claimId: string | null) => void;
 };
 
 type ClaimSteps = {
@@ -53,7 +90,11 @@ type ClaimSteps = {
 // Componente principal
 const ClaimForm: React.FC = () => {
   const router = useRouter();
-  const { claimId } = useLocalSearchParams<{ claimId: string }>();
+  const { claimId, claimCode, claimStep } = useLocalSearchParams<{
+    claimId: string;
+    claimCode: string;
+    claimStep: string;
+  }>();
 
   const { isDarkMode } = useTheme();
   const styles = createStyles(isDarkMode);
@@ -66,7 +107,11 @@ const ClaimForm: React.FC = () => {
   const [canContinue, setCanContinue] = useState<boolean>(true);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
   const [claimIdentifier, setClaimIdentifier] = useState<string | null>(null);
+  const [claimCustomCode, setClaimCode] = useState<string | undefined>(
+    undefined
+  );
   const [claimTitle, setClaimTitle] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // Mapa de pasos por tipo de claim
   const claimSteps: ClaimSteps = {
@@ -78,13 +123,30 @@ const ClaimForm: React.FC = () => {
       { id: "4b", component: StepSolicitarMovimientos, isBranching: true },
       { id: "5", component: StepCuantasCuentas, isBranching: true },
       { id: "6a", component: StepCuantasCuentas1 },
-      { id: "6b", component: StepBanco, onNext: handleBankStepEvent },
-      { id: "8", component: StepNumeroCuenta },
-      { id: "9", component: StepComisiones },
-      { id: "10", component: StepQuienEnvia, isBranching: true },
+      {
+        id: "6b",
+        component: StepBanco,
+        onNext: handleBankStepEvent,
+      },
+      {
+        id: "8",
+        component: StepNumeroCuenta,
+        onNext: handleNumeroCuentaStepEvent,
+      },
+      { id: "9", component: StepComisiones, onNext: handleComisionesStepEvent },
+      {
+        id: "10",
+        component: StepQuienEnvia,
+        isBranching: false,
+        onNext: handleQuienEnviaStepEvent,
+      },
       { id: "11", component: StepUploadDNI },
-      { id: "12", component: StepDNI },
-      { id: "14", component: StepConfirmarDireccion },
+      { id: "12", component: StepDNI, onNext: handleDNIStepEvent },
+      {
+        id: "14",
+        component: StepConfirmarDireccion,
+        onNext: handleConfirmarDireccionStepEvent,
+      },
       { id: "15", component: StepRevisionDocumentos },
       { id: "16", component: StepPeticionPR },
       { id: "17", component: StepGenerarDocumentos },
@@ -92,9 +154,74 @@ const ClaimForm: React.FC = () => {
     ],
   };
 
+  useEffect(() => {
+    // console.log("Estado actualizado: canContinue ->", canContinue);
+    setCanContinue((prev) => (!prev ? false : true)); // Forzar actualización en React
+  }, [canContinue]);
+
   // Identifica los pasos del claim actual
   const steps = claimSteps[claimId || "descubierto"] || [];
   const currentStep = steps.find((step) => step.id === currentStepId);
+
+  // Recuperar los datos guardados al cargar el componente
+  useEffect(() => {
+    const initializeClaim = async () => {
+      if (claimCode && claimStep) {
+        const claimData = await loadClaimDataFromFirebase(claimCode);
+        // console.log(claimData);
+        if (claimData) {
+          await AsyncStorage.setItem("formData", JSON.stringify(claimData));
+          setFormData(claimData); // Carga los datos en el estado
+          setClaimCode(claimCode); // Guarda el código del reclamo
+          setCurrentStepId(claimStep); // Avanza al paso correspondiente
+          setClaimIdentifier(Object.keys(claimData)[0]);
+        } else {
+          console.log("No se encontraron datos para continuar el reclamo.");
+        }
+      } else {
+        // Si no hay claimCode o claimStep, cargar datos locales (AsyncStorage)
+        const savedData = await AsyncStorage.getItem("formData");
+        if (savedData) {
+          setFormData(JSON.parse(savedData));
+        }
+      }
+
+      switch (claimId) {
+        case "descubierto":
+          setClaimTitle("Reclamación por descubierto");
+          break;
+        default:
+          setClaimTitle("Reclamación no registrada");
+          break;
+      }
+      setIsLoading(false); // Finaliza la carga
+    };
+
+    initializeClaim();
+  }, [claimCode, claimStep]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      return () => {
+        // Limpiar todos los estados
+        setFormData({});
+        setCurrentStepId("1");
+        setCanContinue(false);
+        setNavigationHistory([]);
+        setClaimIdentifier(null);
+        setClaimCode(undefined); // <-- Añadir esta línea
+        setClaimTitle(null);
+
+        // Limpiar AsyncStorage
+        AsyncStorage.removeItem("formData");
+        console.log("Datos limpiados al salir del componente.");
+      };
+    }, [])
+  );
+
+  if (isLoading) {
+    return <Text>Cargando...</Text>;
+  }
 
   if (!currentStep) {
     return <Text>Error: Paso no encontrado</Text>;
@@ -107,35 +234,59 @@ const ClaimForm: React.FC = () => {
     isInFireBase: boolean = false
   ) => {
     try {
-      if (!isInFireBase) {
-        setFormData((prevData) => {
-          const updatedData = { ...prevData, [stepId]: data };
-          AsyncStorage.setItem("formData", JSON.stringify(updatedData));
-          return updatedData;
-        });
+      // Antes de revisar isInFireBase, mira si claimCode existe para actualizar los datos en AsyncStorage y no crear nuevos en Firebase
+      //   console.log("claimCode:", claimCode);
+      //   console.log("isInFireBase:", isInFireBase);
+      //   console.log("data:", data);
+      if (!claimCode) {
+        if (!isInFireBase) {
+          setFormData((prevData) => {
+            const updatedData = { ...prevData, [stepId]: data };
+            AsyncStorage.setItem("formData", JSON.stringify(updatedData));
+            return updatedData;
+          });
+        } else {
+          // Obtén los datos actuales de AsyncStorage
+          const currentData = await AsyncStorage.getItem("formData");
+          if (currentData) {
+            const parsedData = JSON.parse(currentData);
+
+            // Asegúrate de que claimIdentifier esté definido y sea válido
+            if (claimIdentifier) {
+              const updatedClaimData = {
+                ...parsedData[claimIdentifier],
+                ...data, // Actualiza con los nuevos datos
+              };
+
+              // Asigna los datos actualizados al identificador del claim
+              parsedData[claimIdentifier] = updatedClaimData;
+
+              // Guarda los datos actualizados en AsyncStorage
+              setFormData(parsedData);
+              await AsyncStorage.setItem(
+                "formData",
+                JSON.stringify(parsedData)
+              );
+            } else {
+              console.error("claimIdentifier no está definido.");
+            }
+          } else {
+            console.error("No se encontró ningún dato en AsyncStorage.");
+          }
+        }
       } else {
-        // Obtén los datos actuales de AsyncStorage
         const currentData = await AsyncStorage.getItem("formData");
         if (currentData) {
           const parsedData = JSON.parse(currentData);
+          const updatedClaimData = {
+            ...parsedData[claimCode],
+            ...data, // Actualiza con los nuevos datos
+          };
 
-          // Asegúrate de que claimIdentifier esté definido y sea válido
-          if (claimIdentifier) {
-            const updatedClaimData = {
-              ...parsedData[claimIdentifier],
-              ...data, // Actualiza con los nuevos datos
-            };
-
-            // Asigna los datos actualizados al identificador del claim
-            parsedData[claimIdentifier] = updatedClaimData;
-
-            // Guarda los datos actualizados en AsyncStorage
-            await AsyncStorage.setItem("formData", JSON.stringify(parsedData));
-          } else {
-            console.error("claimIdentifier no está definido.");
-          }
-        } else {
-          console.error("No se encontró ningún dato en AsyncStorage.");
+          // Asigna los datos actualizados al identificador del claim
+          parsedData[claimCode] = updatedClaimData;
+          setFormData(parsedData);
+          await AsyncStorage.setItem("formData", JSON.stringify(parsedData));
         }
       }
     } catch (error) {
@@ -143,57 +294,67 @@ const ClaimForm: React.FC = () => {
     }
   };
 
-  // Recuperar los datos guardados al cargar el componente
-  useEffect(() => {
-    const loadFormData = async () => {
-      try {
-        const savedData = await AsyncStorage.getItem("formData");
-        if (savedData) {
-          setFormData(JSON.parse(savedData));
-        }
-      } catch (error) {
-        console.error("Error al cargar los datos guardados:", error);
-      }
-    };
-
-    switch (claimId) {
-      case "descubierto":
-        setClaimTitle("Reclamación por decubierto");
-        break;
-      default:
-        setClaimTitle("Reclamación no registrada");
-        break;
-    }
-
-    loadFormData();
-  }, []);
-
   // Ir a un paso específico (para ramificaciones)
-  const goToStep = (stepId: string) => {
-    setNavigationHistory((prev) => [...prev, currentStepId]);
-    setCurrentStepId(stepId);
-    setCanContinue(false);
+  const goToStep = async (stepId: string) => {
+    try {
+      await handleOnNextEvents();
+      setNavigationHistory((prev) => [...prev, currentStepId]);
+      setCurrentStepId(stepId);
+    } catch (error) {
+      console.error("Error en handleOnNextEvents:", error);
+    }
   };
 
   // Ir al paso siguiente basado en el índice actual
   const handleNextStep = async () => {
     const currentIndex = steps.findIndex((step) => step.id === currentStepId);
 
-    if (currentStep.onNext) {
-      const result = await currentStep.onNext(formData[currentStepId] || {});
-      if (result !== undefined) {
-        setClaimIdentifier(result); // Guardar el identificador en el estado
-      }
-    }
+    handleOnNextEvents();
 
     if (currentIndex < steps.length - 1) {
       const nextStepId = steps[currentIndex + 1].id;
+
       setNavigationHistory((prev) => [...prev, currentStepId]);
       setCurrentStepId(nextStepId);
-      setCanContinue(false);
     } else {
       console.log("Formulario completado:", formData);
       router.push("/success");
+    }
+  };
+
+  const handleOnNextEvents = async (): Promise<void> => {
+    if (currentStep.onNext) {
+      // Añadir lógica para los eventos personalizados de los pasos
+      switch (true) {
+        case currentStep.onNext.toString().includes("handleBankStepEvent"):
+          if (claimIdentifier === null) {
+            const result = await currentStep.onNext(
+              formData || {},
+              claimIdentifier
+            );
+            if (result !== undefined) {
+              setClaimIdentifier(result); // Guardar el identificador en el estado
+            }
+          }
+          break;
+        case currentStep.onNext
+          .toString()
+          .includes("handleNumeroCuentaStepEvent"):
+        case currentStep.onNext
+          .toString()
+          .includes("handleComisionesStepEvent"):
+        case currentStep.onNext.toString().includes("handleDNIStepEvent"):
+        case currentStep.onNext
+          .toString()
+          .includes("handleQuienEnviaStepEvent"):
+        case currentStep.onNext
+          .toString()
+          .includes("handleConfirmarDireccionStepEvent"):
+          await currentStep.onNext(formData || {}, claimIdentifier);
+          break;
+        default:
+          break;
+      }
     }
   };
 
@@ -203,7 +364,7 @@ const ClaimForm: React.FC = () => {
       const previousStepId = navigationHistory[navigationHistory.length - 1];
       setNavigationHistory((prev) => prev.slice(0, -1));
       setCurrentStepId(previousStepId);
-      setCanContinue(true);
+      setCanContinue(false);
     }
   };
 
@@ -226,20 +387,20 @@ const ClaimForm: React.FC = () => {
 
   const logStoredData = async () => {
     try {
+      console.log(canContinue);
       const data = await AsyncStorage.getItem("formData");
       if (data !== null) {
         console.log("Contenido de formData:", JSON.parse(data));
       } else {
         console.log("No se encontró ningún dato en formData");
       }
-      //   console.log(getCurrentUserId());
     } catch (error) {
       console.error("Error al obtener formData de AsyncStorage:", error);
     }
   };
 
   return (
-    <View style={styles.claimContainer}>
+    <View style={styles.claimContainer} key={`${claimCode}-${claimStep}`}>
       <Text style={[styles.screenTitle, { marginTop: 15, marginRight: 20 }]}>
         {claimTitle}
       </Text>
@@ -250,6 +411,7 @@ const ClaimForm: React.FC = () => {
           updateData={updateData}
           goToStep={goToStep}
           setCanContinue={setCanContinue}
+          claimCode={claimCustomCode} // Pasar el código del reclamo
         />
       </View>
 
@@ -259,7 +421,7 @@ const ClaimForm: React.FC = () => {
           <SecondaryButton title="Anterior" onPress={handlePrevStep} />
         )}
         <PrimaryButton title="consola" onPress={logStoredData} />
-        <SecondaryButton title="clean formData" onPress={cleanStoredData} />
+        {/* <SecondaryButton title="clean formData" onPress={cleanStoredData} /> */}
         {!currentStep.isBranching && (
           <PrimaryButton
             title={

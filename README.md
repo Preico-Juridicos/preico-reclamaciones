@@ -48,3 +48,17 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+## Custom Info
+
+Para añadir nuevos bancos, aqui hay muchos logos de marcas: https://brandfetch.com/
+
+
+
+##TODO
+
+En el paso de StepQuienEnvia guardar un flag para saber quien lo envia.
+En el paso StepPeticionPR (Enviar peticion que funcione, quitar boton atras, que mejor luego guarde el step y vaya al inicio)
+En el paso de DNI, que el boton Anterior, salte 2 pasos.
+En las multiples cuentas (mejorar el aspecto visual del input)

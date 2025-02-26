@@ -61,7 +61,7 @@ function LayoutContent() {
           }}
         />
         <Drawer.Screen
-          name="claims"
+          name="all-claims"
           options={{
             drawerItemStyle: { display: "none" },
           }}
@@ -185,7 +185,7 @@ function LayoutContent() {
           }}
         />
         <Drawer.Screen
-          name="claims"
+          name="all-claims"
           options={{
             drawerIcon: ({ focused, size }) => (
               <MaterialIcons

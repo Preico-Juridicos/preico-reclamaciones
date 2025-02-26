@@ -70,6 +70,16 @@ export default function claims() {
     };
 
     fetchClaims();
+    // For Tests
+    // const getBancos = async () => {
+    //   const bancoRef = collection(firestore, "bancos");
+    //   let bancoQuery = await getDocs(bancoRef);
+    //   const bancoSnapshot = bancoQuery.docs.map((banco) => {
+    //     console.log(banco.data().banco_nombre);
+    //     return banco.data();
+    //   });
+    // };
+    // getBancos();
   }, []);
 
   const handleCardPress = (claim: ClaimType): void => {

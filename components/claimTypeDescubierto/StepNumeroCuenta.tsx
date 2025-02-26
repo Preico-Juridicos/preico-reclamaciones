@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TextInput, ScrollView } from "react-native";
 import { useTheme } from "@/contexts/ThemeContext";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import createStyles from "@/assets/styles/themeStyles";
 
 type StepComponentProps = {
@@ -13,6 +14,7 @@ type StepComponentProps = {
   ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
+  claimCode?: string;
 };
 
 const StepNumeroCuenta: React.FC<StepComponentProps> = ({
@@ -20,6 +22,7 @@ const StepNumeroCuenta: React.FC<StepComponentProps> = ({
   data,
   updateData,
   setCanContinue,
+  claimCode,
 }) => {
   const { isDarkMode } = useTheme();
   const styles = createStyles(isDarkMode);
@@ -32,6 +35,28 @@ const StepNumeroCuenta: React.FC<StepComponentProps> = ({
     );
     setCanContinue(isValid);
   }, [numeroCuenta, setCanContinue]);
+
+  useEffect(() => {
+    setCanContinue(false);
+
+    const loadStoredData = async () => {
+      try {
+        const storedData = await AsyncStorage.getItem("formData");
+        if (storedData) {
+          const parsedData = JSON.parse(storedData);
+          let numeroCuenta = parsedData.numeroCuenta;
+          if (claimCode && parsedData[claimCode]?.numeroCuenta) {
+            numeroCuenta = parsedData[claimCode].numeroCuenta;
+            setNumeroCuenta(numeroCuenta);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading stored data:", error);
+      }
+    };
+
+    loadStoredData();
+  }, [claimCode]);
 
   const handleInputChange = (value: string) => {
     setNumeroCuenta(value);
@@ -58,7 +83,14 @@ const StepNumeroCuenta: React.FC<StepComponentProps> = ({
         .
       </Text>
       <TextInput
-        style={[styles.formInput, { marginTop: 20 }]}
+        style={[
+          styles.formInput,
+          { marginTop: 20 },
+          !/^ES\d{2}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}\s?\d{4}$/.test(
+            numeroCuenta
+          ) &&
+            numeroCuenta && { borderColor: styles.formError.backgroundColor },
+        ]}
         onChangeText={handleInputChange}
         value={numeroCuenta}
         placeholder="ESXX XXXX XXXX XXXX XXXX XXXX"

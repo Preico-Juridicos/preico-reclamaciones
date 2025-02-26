@@ -7,10 +7,13 @@ import QuantityInput from "@/components/QuantityInput";
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
-  updateData: (stepId: string, data: Record<string, any>) => void;
+  updateData: (
+    stepId: string,
+    data: Record<string, any>,
+    isInFireBase: boolean
+  ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
-
 };
 
 const StepCuantasCuentas1: React.FC<StepComponentProps> = ({
@@ -18,12 +21,14 @@ const StepCuantasCuentas1: React.FC<StepComponentProps> = ({
   data,
   updateData,
   goToStep,
-  setCanContinue
+  setCanContinue,
 }) => {
   const { isDarkMode } = useTheme();
   const styles = createStyles(isDarkMode);
 
-  const [cantidadCuentas, setCantidadCuentas] = useState<number>(data.cantidadCuentas || 1);
+  const [cantidadCuentas, setCantidadCuentas] = useState<number>(
+    data.cantidadCuentas || 1
+  );
 
   useEffect(() => {
     // Solo actualiza si el valor ha cambiado
@@ -31,12 +36,14 @@ const StepCuantasCuentas1: React.FC<StepComponentProps> = ({
       updateData(stepId, { ...data, cantidadCuentas });
       setCanContinue(true);
     }
-    
   }, [cantidadCuentas, stepId, updateData, data]);
 
   const handleQuantityChange = (value: number) => {
     if (value < 1) {
-      Alert.alert("Error", "El campo de cantidad de cuentas debe ser mayor a 0.");
+      Alert.alert(
+        "Error",
+        "El campo de cantidad de cuentas debe ser mayor a 0."
+      );
       return;
     }
     setCantidadCuentas(value);
@@ -48,9 +55,9 @@ const StepCuantasCuentas1: React.FC<StepComponentProps> = ({
         Indícanos en cuántas cuentas se aplicaron las comisiones
       </Text>
       <Text style={styles.formText}>
-        Una vez finalices la reclamación actual, repetiremos el proceso para cada
-        una de las cuentas bancarias que tengas. Por ello, te pedimos que nos
-        indiques en cuántas cuentas bancarias se han aplicado.
+        Una vez finalices la reclamación actual, repetiremos el proceso para
+        cada una de las cuentas bancarias que tengas. Por ello, te pedimos que
+        nos indiques en cuántas cuentas bancarias se han aplicado.
       </Text>
       <QuantityInput
         min={1}

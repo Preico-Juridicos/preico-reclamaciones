@@ -7,7 +7,11 @@ import createStyles from "@/assets/styles/themeStyles";
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
-  updateData: (stepId: string, data: Record<string, any>) => void;
+  updateData: (
+    stepId: string,
+    data: Record<string, any>,
+    isInFireBase: boolean
+  ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
 };
@@ -37,9 +41,9 @@ const StepRevisionDocumentos: React.FC<StepComponentProps> = ({
 
         console.log(hasPR);
         if (hasPR) {
-          navigation.navigate("StepGenerarDocumentos");
+          goToStep("15");
         } else {
-          navigation.navigate("StepPeticionPR");
+          goToStep("16");
         }
       }
     } catch (error) {
@@ -52,13 +56,13 @@ const StepRevisionDocumentos: React.FC<StepComponentProps> = ({
       fetchData();
     }, 2000);
     return () => clearTimeout(timer);
-  }, [navigation]);
+  }, [stepId]);
 
-  useEffect(() => {
-    if (currentStep !== 13) {
-      updateStep(13);
-    }
-  }, [currentStep, updateStep]);
+//   useEffect(() => {
+//     if (currentStep !== 13) {
+//       updateStep(13);
+//     }
+//   }, [currentStep, updateStep]);
 
   return (
     <ScrollView

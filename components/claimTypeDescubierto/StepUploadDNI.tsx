@@ -20,7 +20,11 @@ import createStyles from "@/assets/styles/themeStyles";
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
-  updateData: (stepId: string, data: Record<string, any>) => void;
+  updateData: (
+    stepId: string,
+    data: Record<string, any>,
+    isInFireBase: boolean
+  ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
 };
@@ -33,8 +37,8 @@ const StepUploadDNI: React.FC<StepComponentProps> = ({
   setCanContinue,
 }) => {
   const styles = createStyles();
-  const [dniFront, setDniFront] = useState(null);
-  const [dniBack, setDniBack] = useState(null);
+  const [dniFront, setDniFront] = useState<string | null>(null);
+  const [dniBack, setDniBack] = useState<string | null>(null);
   const [isFrontCaptured, setIsFrontCaptured] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -60,16 +64,24 @@ const StepUploadDNI: React.FC<StepComponentProps> = ({
     checkDniExists();
   }, []);
 
-  const pickImageWeb = async (setImage) => {
+  const pickImageWeb = async (setImage: (image: string) => void) => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
     input.onchange = () => {
-      const file = input.files[0];
+      const file = input.files ? input.files[0] : null;
+      if (!file) {
+        console.error("No file selected");
+        return;
+      }
       if (file) {
         const fileReader = new FileReader();
         fileReader.onloadend = () => {
-          setImage(fileReader.result);
+          if (typeof fileReader.result === "string") {
+            setImage(fileReader.result);
+          } else {
+            console.error("FileReader result is not a string");
+          }
           checkImageOrientation(file);
         };
         fileReader.readAsDataURL(file);
@@ -102,7 +114,7 @@ const StepUploadDNI: React.FC<StepComponentProps> = ({
     }
   };
 
-  const checkImageOrientation = (image) => {
+  const checkImageOrientation = (image: any) => {
     if (image.width > image.height) {
       Alert.alert("Imagen horizontal detectada", "Se rotará automáticamente.");
       // Aquí podrías aplicar un método para rotar la imagen si es necesario.
@@ -137,7 +149,6 @@ const StepUploadDNI: React.FC<StepComponentProps> = ({
         expireDate: scanDataFront.expireDate,
         address: scanDataBack.address,
       };
-
       setDniFront(null);
       setDniBack(null);
       setIsFrontCaptured(false);
@@ -157,13 +168,13 @@ const StepUploadDNI: React.FC<StepComponentProps> = ({
         "Error el documento de identificacion",
         "Ha pasado algo al procesar los datos de las imágenes intentalo de nuevo."
       );
-      console.log(error.message);
+      console.log((error as any).message);
     } finally {
       setIsUploading(false);
     }
   };
 
-  const saveToFirestore = async (data) => {
+  const saveToFirestore = async (data: any) => {
     try {
       const userId = getCurrentUserId();
       if (!userId) {
