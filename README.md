@@ -58,7 +58,4 @@ Para añadir nuevos bancos, aqui hay muchos logos de marcas: https://brandfetch.
 
 ##TODO
 
-En el paso de StepQuienEnvia guardar un flag para saber quien lo envia.
-En el paso StepPeticionPR (Enviar peticion que funcione, quitar boton atras, que mejor luego guarde el step y vaya al inicio)
-En el paso de DNI, que el boton Anterior, salte 2 pasos.
-En las multiples cuentas (mejorar el aspecto visual del input)
+

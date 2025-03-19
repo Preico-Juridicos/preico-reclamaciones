@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import { Text, StyleSheet, ScrollView } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@/contexts/ThemeContext";
 import createStyles from "@/assets/styles/themeStyles";
 
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
+  claimIdentifier?: string;
   updateData: (
     stepId: string,
     data: Record<string, any>,
@@ -14,6 +14,7 @@ type StepComponentProps = {
   ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
+  claimCode: string | undefined;
 };
 
 const StepRevisionDocumentos: React.FC<StepComponentProps> = ({
@@ -22,27 +23,31 @@ const StepRevisionDocumentos: React.FC<StepComponentProps> = ({
   updateData,
   goToStep,
   setCanContinue,
+  claimCode,
 }) => {
   const { isDarkMode } = useTheme();
   const styles = createStyles(isDarkMode);
 
-  //   Revisar si tenemos el poder notarial,
+  //   Revisar si tenemos el poder de respresentación,
   //   si los tenemos generamos los documentos y los enviamos
   //   si no los tenemos usamos firmafy
   const fetchData = async () => {
     try {
-      const data = await AsyncStorage.getItem("formData");
-      if (data !== null) {
-        const formData = JSON.parse(data);
+      //   console.log(data);
 
-        console.log("Datos almacenados en AsyncStorage:", formData);
-
-        const { hasPR } = formData[Object.keys(formData)[1]];
-
+      if (!claimCode) {
+        claimCode = Object.keys(data)[1];
+        // console.log(Object.keys(data));
+        // console.log(claimCode);
+      }
+      if (data !== undefined) {
+        const { hasPR } = data[claimCode];
         console.log(hasPR);
         if (hasPR) {
+          updateData(stepId, { hasPR: true }, true);
           goToStep("15");
         } else {
+          updateData(stepId, { hasPR: false }, true);
           goToStep("16");
         }
       }
@@ -57,12 +62,6 @@ const StepRevisionDocumentos: React.FC<StepComponentProps> = ({
     }, 2000);
     return () => clearTimeout(timer);
   }, [stepId]);
-
-//   useEffect(() => {
-//     if (currentStep !== 13) {
-//       updateStep(13);
-//     }
-//   }, [currentStep, updateStep]);
 
   return (
     <ScrollView

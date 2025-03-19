@@ -17,6 +17,8 @@ import { firestore, auth, getCurrentUserId } from "@/firebase.config";
 import { useTheme } from "@/contexts/ThemeContext";
 import createStyles from "@/assets/styles/themeStyles";
 
+import { getPostalCode } from "@api/postalcodeAPIService";
+
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
@@ -152,6 +154,14 @@ const StepUploadDNI: React.FC<StepComponentProps> = ({
       setDniFront(null);
       setDniBack(null);
       setIsFrontCaptured(false);
+      //Añadir el buscar el codigo postal
+      try {
+        const postalCode = await getPostalCode(data.address);
+        console.log("Código Postal obtenido:", postalCode);
+      } catch (error) {
+        console.error("Error al obtener el código postal:", error);
+      }
+
       const savedData = await saveToFirestore(data);
       if (savedData) {
         Alert.alert("Datos registrados correctamente.");

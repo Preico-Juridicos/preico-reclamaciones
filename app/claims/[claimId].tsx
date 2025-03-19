@@ -14,6 +14,7 @@ import {
   handleDNIStepEvent,
   handleConfirmarDireccionStepEvent,
   handleQuienEnviaStepEvent,
+  handlePeticionPRStepEvent,
 } from "@/components/claimTypeDescubierto/descubiertoLogic";
 
 // Componente de Descubierto
@@ -37,7 +38,6 @@ import StepGenerarDocumentos from "@/components/claimTypeDescubierto/StepGenerar
 import Summary from "@/components/claimTypeDescubierto/Summary";
 import { getCurrentUserId, firestore } from "@/firebase.config";
 import { doc, getDoc } from "firebase/firestore";
-import claims from "@/claims";
 
 const loadClaimDataFromFirebase = async (claimCode: string) => {
   try {
@@ -73,7 +73,7 @@ type StepComponentProps = {
   ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
-  claimCode?: string | undefined;
+  claimCode: string | undefined;
 };
 
 type Step = {
@@ -148,7 +148,11 @@ const ClaimForm: React.FC = () => {
         onNext: handleConfirmarDireccionStepEvent,
       },
       { id: "15", component: StepRevisionDocumentos },
-      { id: "16", component: StepPeticionPR },
+      {
+        id: "16",
+        component: StepPeticionPR,
+        onNext: handlePeticionPRStepEvent,
+      },
       { id: "17", component: StepGenerarDocumentos },
       { id: "18", component: Summary },
     ],
@@ -235,9 +239,9 @@ const ClaimForm: React.FC = () => {
   ) => {
     try {
       // Antes de revisar isInFireBase, mira si claimCode existe para actualizar los datos en AsyncStorage y no crear nuevos en Firebase
-      //   console.log("claimCode:", claimCode);
-      //   console.log("isInFireBase:", isInFireBase);
-      //   console.log("data:", data);
+      // console.log("claimCode:", claimCode);
+      // console.log("isInFireBase:", isInFireBase);
+      // console.log("data:", data);
       if (!claimCode) {
         if (!isInFireBase) {
           setFormData((prevData) => {
@@ -297,7 +301,12 @@ const ClaimForm: React.FC = () => {
   // Ir a un paso específico (para ramificaciones)
   const goToStep = async (stepId: string) => {
     try {
+      console.log("goToStep:", stepId);
       await handleOnNextEvents();
+      if (stepId === "-1") {
+        handleGoToHome();
+        return;
+      }
       setNavigationHistory((prev) => [...prev, currentStepId]);
       setCurrentStepId(stepId);
     } catch (error) {
@@ -350,6 +359,9 @@ const ClaimForm: React.FC = () => {
         case currentStep.onNext
           .toString()
           .includes("handleConfirmarDireccionStepEvent"):
+        case currentStep.onNext
+          .toString()
+          .includes("handlePeticionPRStepEvent"):
           await currentStep.onNext(formData || {}, claimIdentifier);
           break;
         default:
@@ -407,7 +419,7 @@ const ClaimForm: React.FC = () => {
       <View style={styles.claimStepContainer}>
         <CurrentStepComponent
           stepId={currentStepId}
-          data={formData[currentStepId] || {}}
+          data={formData}
           updateData={updateData}
           goToStep={goToStep}
           setCanContinue={setCanContinue}

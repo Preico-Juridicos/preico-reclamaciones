@@ -69,10 +69,6 @@ const StepBanco: React.FC<StepComponentProps> = ({
             setSelectedBank(entidadBancaria);
             setCanContinue(true);
           }
-
-          //   if (entidadBancaria) {
-          //     updateData(stepId, { ...data, entidadBancaria });
-          //   }
         }
       } catch (error) {
         console.error("Error loading stored data:", error);
@@ -140,14 +136,14 @@ const StepBanco: React.FC<StepComponentProps> = ({
         onFocus={() => setIsFocus(true)}
         onBlur={() => setIsFocus(false)}
         onChange={(item) => {
-          updateData(stepId, { ...data, entidadBancaria: item.value });
+          updateData(stepId, { entidadBancaria: item.value }, false);
           setSelectedBank(item.value);
           setIsFocus(false);
           setCanContinue(true);
         }}
       />
       <Text
-        style={[styles.link, { textAlign: "center", marginVertical: 20 }]}
+        style={[styles.formLink, { textAlign: "center", marginVertical: 20 }]}
         onPress={noEncuentroMiBanco}
       >
         ¿No encuentras tu banco? Avísanos

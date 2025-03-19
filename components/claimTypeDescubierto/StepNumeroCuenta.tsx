@@ -60,7 +60,7 @@ const StepNumeroCuenta: React.FC<StepComponentProps> = ({
 
   const handleInputChange = (value: string) => {
     setNumeroCuenta(value);
-    updateData(stepId, { ...data, numeroCuenta: value }, true);
+    updateData(stepId, { numeroCuenta: value }, true);
   };
 
   return (

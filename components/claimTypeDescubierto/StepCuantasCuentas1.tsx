@@ -33,10 +33,10 @@ const StepCuantasCuentas1: React.FC<StepComponentProps> = ({
   useEffect(() => {
     // Solo actualiza si el valor ha cambiado
     if (data.cantidadCuentas !== cantidadCuentas) {
-      updateData(stepId, { ...data, cantidadCuentas });
+      updateData(stepId, { cantidadCuentas }, false);
       setCanContinue(true);
     }
-  }, [cantidadCuentas, stepId, updateData, data]);
+  }, [cantidadCuentas]);
 
   const handleQuantityChange = (value: number) => {
     if (value < 1) {

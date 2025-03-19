@@ -80,7 +80,7 @@ const StepComisiones: React.FC<StepComisionesProps> = ({
       0
     );
     setTotal(suma);
-    updateData(stepId, { ...data, comisiones }, true);
+    updateData(stepId, { comisiones }, true);
     setCanContinue(comisiones.every((com) => com.fecha && com.importe));
   };
 

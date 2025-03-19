@@ -10,6 +10,7 @@ import createStyles from "@/assets/styles/themeStyles";
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
+  claimIdentifier?: string;
   updateData: (
     stepId: string,
     data: Record<string, any>,
@@ -17,7 +18,7 @@ type StepComponentProps = {
   ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
-  claimCode?: string;
+  claimCode: string | undefined;
 };
 
 const getUserInfo = async (docId: any) => {
@@ -75,25 +76,28 @@ const StepDNI: React.FC<StepComponentProps> = ({
                 ? [...currentData, dni, nombreCompleto] // Si es un array, añade los valores al array
                 : { ...currentData, dni, nombreCompleto }; // Si es un objeto, fusiona los objetos
 
-              const updatedData = {
-                ...formData,
-                [claimCode || "defaultClaimCode"]: updatedValue,
-              };
-              await AsyncStorage.setItem(
-                "formData",
-                JSON.stringify(updatedData)
-              );
-            //   console.log("control");
-            //   console.log({
-            //     ...currentData,
-            //     dni: dni,
-            //     nombreCompleto: nombreCompleto,
-            //   });
-              updateData(
-                stepId,
-                { ...currentData, dni: dni, nombreCompleto: nombreCompleto },
-                true
-              );
+              if (claimCode) {
+                const updatedData = {
+                  ...formData,
+                  [claimCode]: updatedValue,
+                };
+                await AsyncStorage.setItem(
+                  "formData",
+                  JSON.stringify(updatedData)
+                );
+
+                //   console.log("control");
+                //   console.log({
+                //     ...currentData,
+                //     dni: dni,
+                //     nombreCompleto: nombreCompleto,
+                //   });
+                updateData(
+                  stepId,
+                  { ...currentData, dni: dni, nombreCompleto: nombreCompleto },
+                  true
+                );
+              }
             }
           }
 
@@ -122,7 +126,6 @@ const StepDNI: React.FC<StepComponentProps> = ({
   //     navigation.navigate("StepConfirmarDireccion");
   //   };
   const handlePreviousStep = () => {
-    //     updateData(stepId, { ...data, reScanDNI: true });
     goToStep("11");
   };
 

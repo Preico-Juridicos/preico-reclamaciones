@@ -25,12 +25,10 @@ const StepTienesMovimientos: React.FC<StepComponentProps> = ({
   const styles = createStyles(isDarkMode);
 
   const handleSelectOptionA = () => {
-    // updateData(stepId, { ...data, selectedOption: "A" });
     goToStep("4a"); // Ir al camino A
   };
 
   const handleSelectOptionB = () => {
-    // updateData(stepId, { ...data, selectedOption: "B" });
     goToStep("4b"); // Ir al camino B
   };
 

@@ -5,6 +5,8 @@ import axios from "axios";
 const FIRMAFY_ENDPOINT =
   "https://app.firmafy.com/ApplicationProgrammingInterface.php";
 const id_show = "9044e9cdbe37563f523ca62a59d6e0aa";
+// const usuario = "app@preicojuridicos.com";
+// const password = "2E2uuF1#$9^J";
 
 /**
  * Método genérico para realizar solicitudes a la API de Firmafy.

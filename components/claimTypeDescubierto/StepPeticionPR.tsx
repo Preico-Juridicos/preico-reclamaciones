@@ -6,11 +6,16 @@ import createStyles from "@/assets/styles/themeStyles";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { doc, setDoc } from "firebase/firestore";
-import { firestore, getCurrentUserId } from "@/firebase.config";
+import { getUserData, getCurrentUserId } from "@/firebase.config";
+import { useRouter } from "expo-router";
+import { generatePR } from "@api/pdfGenerationService";
+
+import { enviarSolicitudDeFirma } from "@api/firmaFyServicePR";
 
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
+  claimIdentifier?: string;
   updateData: (
     stepId: string,
     data: Record<string, any>,
@@ -18,6 +23,7 @@ type StepComponentProps = {
   ) => void;
   goToStep: (stepId: string) => void;
   setCanContinue: (canContinue: boolean) => void;
+  claimCode: string | undefined;
 };
 
 const StepPeticionPR: React.FC<StepComponentProps> = ({
@@ -26,7 +32,9 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
   updateData,
   goToStep,
   setCanContinue,
+  claimCode,
 }) => {
+  const router = useRouter();
   const { isDarkMode } = useTheme();
   const styles = createStyles(isDarkMode);
   const [cantidadCuentas, setCantidadCuentas] = useState(1);
@@ -47,58 +55,56 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
     fetchData();
   }, []);
 
-//   useEffect(() => {
-//     if (currentStep !== 13) {
-//       updateStep(13);
-//     }
-//   }, [currentStep, updateStep]);
+  //   useEffect(() => {
+  //     if (currentStep !== 13) {
+  //       updateStep(13);
+  //     }
+  //   }, [currentStep, updateStep]);
 
-  const handleSubmitPN = async () => {
+  const handleSubmitPR = async () => {
     try {
-      const userId = getCurrentUserId();
+      const userID = getCurrentUserId();
+      if (!userID) return;
+      if (!claimCode) return;
+      //   console.log(claimCode);
+      updateData(claimCode, { hasPR: false }, true);
 
-      if (!userId) {
-        Alert.alert("Error", "No se pudo obtener el usuario actual.");
-        return;
+      //   console.log(data[claimCode]);
+      const pdfData = {
+        nombre: data[claimCode].nombreCompleto,
+        dni: data[claimCode].dni,
+        direccion: data[claimCode].address,
+      };
+      //   Llamada sincrónica a la API para generar el PDF
+      const pdfResponse = await generatePR({ claimCode, pdfData });
+      if (!pdfResponse.success) {
+        throw new Error("No se ha podido generar el PDF");
       }
+    //   console.log(pdfResponse.fileName);
+      console.log(pdfResponse.fileUrl);
 
-      const data = await AsyncStorage.getItem("formData");
-      if (!data) {
-        Alert.alert("Error", "No se encontraron datos en AsyncStorage.");
-        return;
+      //   Enviar el PDF a Firmafy
+      const userD = await getUserData(userID);
+      if (!userD) {
+        throw new Error("No se ha podido obtener los datos del usuario");
       }
-
-      const formData = JSON.parse(data);
-      //   console.log(formData);
-      const reclamacionId = Object.keys(formData)[1]; // Obtener el ID del primer elemento
-
-      if (!reclamacionId) {
-        Alert.alert("Error", "No se pudo obtener el ID de la reclamación.");
-        return;
-      }
-      //   console.log(reclamacionId);
-      const currentData = formData[reclamacionId] || [];
-      const updatedValue = Array.isArray(currentData)
-        ? [...currentData, { hasPR: false, currentStep: "StepPeticionPR" }] // Si es un array, añade los valores al array
-        : {
-            ...currentData,
-            ...{ hasPR: false, currentStep: "StepPeticionPR" },
-          }; // Si es un objeto, fusiona los objetos
-
-      const docRef = doc(
-        firestore,
-        `usuarios/${userId}/reclamaciones`,
-        reclamacionId
-      );
-      await setDoc(
-        docRef,
-        {
-          ...updatedValue,
-        },
-        { merge: true }
+      const userData = {
+        nombre: data[claimCode].nombreCompleto,
+        dni: data[claimCode].dni,
+        email: userD.email,
+        cargo: "Contratante", 
+        telefono: 697222324,
+      };
+      const firmafyResponse = await enviarSolicitudDeFirma(
+        pdfResponse.fileName,
+        pdfResponse.fileUrl,
+        userData
       );
 
-      //   console.log("Reclamación actualizada/creada");
+      console.log(firmafyResponse);
+      if (!firmafyResponse.success) {
+        throw new Error("Error al enviar a Firmafy");
+      }
 
       Alert.alert(
         "Petición Enviada",
@@ -106,17 +112,19 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
           ? "Hemos enviando la petición a tu correo. Por favor vuelve cuando la tengas firmada."
           : "Hemos enviando la petición a tu correo. Por favor vuelve cuando la tengas firmada. Ahora procederemos con la siguiente cuenta."
       );
+      // Esperar 2 segundos para que el usuario vea la alerta
+      //   await new Promise((resolve) => setTimeout(resolve, 2000));
 
       if (cantidadCuentas > 1) {
-        delete formData[reclamacionId];
-        await AsyncStorage.setItem("formData", JSON.stringify(formData));
+        delete data[claimCode];
+        await AsyncStorage.setItem("formData", JSON.stringify(data));
         const newCantidadCuentas = cantidadCuentas - 1;
         setCantidadCuentas(newCantidadCuentas);
         await updateCantidadCuentasInStorage(newCantidadCuentas);
-        navigation.navigate("StepBanco");
+        // goToStep("6b");
       } else {
         await AsyncStorage.removeItem("formData");
-        navigation.navigate("Inicio");
+        // goToStep("-1");
       }
     } catch (error) {
       console.error("Error al enviar la petición:", error);
@@ -124,7 +132,7 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
     }
   };
 
-  const updateCantidadCuentasInStorage = async (newCantidadCuentas) => {
+  const updateCantidadCuentasInStorage = async (newCantidadCuentas: number) => {
     try {
       const data = await AsyncStorage.getItem("formData");
       if (data) {
@@ -141,10 +149,9 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
   };
 
   const handleGoHome = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "Inicio" }],
-    });
+    // Hacer que guarde el hasRP en false y el step en 16
+    goToStep("-1");
+    // router.push("/");
   };
 
   return (
@@ -155,9 +162,8 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
         sistema seguro de firmas online para ello.
       </Text>
       <View style={{ gap: 10, marginTop: 10 }}>
-        <PrimaryButton onPress={handleSubmitPN} title="Enviame la petición" />
+        <PrimaryButton onPress={handleSubmitPR} title="Enviame la petición" />
         <SecondaryButton title="Mejor Luego" onPress={handleGoHome} />
-        {/* <SecondaryButton title="Atrás" onPress={() => navigation.goBack()} /> */}
       </View>
     </ScrollView>
   );

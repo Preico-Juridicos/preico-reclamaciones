@@ -75,7 +75,7 @@ export const handleComisionesStepEvent = async (
   data: Record<string, any>,
   claimId: string | null = null
 ) => {
-  console.log("Evento personalizado para el paso comisiones:", data);
+  //   console.log("Evento personalizado para el paso comisiones:", data);
 
   if (claimId !== null) {
     if (data[claimId].comisiones) {
@@ -112,7 +112,7 @@ export const handleConfirmarDireccionStepEvent = async (
   data: Record<string, any>,
   claimId: string | null = null
 ) => {
-  console.log("Evento personalizado para el paso Direccion:", data);
+  //   console.log("Evento personalizado para el paso Direccion:", data);
 
   if (claimId !== null) {
     if (data[claimId].address) {
@@ -124,14 +124,30 @@ export const handleQuienEnviaStepEvent = async (
   data: Record<string, any>,
   claimId: string | null = null
 ) => {
-  console.log("Evento personalizado para el paso QuienEnvia:", data);
+  //   console.log("Evento personalizado para el paso QuienEnvia:", data);
 
   if (claimId !== null) {
     if (data[claimId].whoSends) {
-      setDataToFirestore(claimId, "14", "whoSends", data[claimId].whoSends);
+      setDataToFirestore(claimId, "10", "whoSends", data[claimId].whoSends);
     }
   }
 };
+
+export const handlePeticionPRStepEvent = async (
+  data: Record<string, any>,
+  claimId: string | null = null
+) => {
+  console.log("Evento personalizado para el paso PR:");
+
+  console.log(claimId);
+  if (claimId !== null) {
+    console.log(data[claimId].hasPR);
+    if (data[claimId].hasPR) {
+      await setDataToFirestore(claimId, "16", "hasPR", data[claimId].hasPR);
+    }
+  }
+};
+
 //Funciones intermedias
 const initDataToFirestore = async (value: string) => {
   try {

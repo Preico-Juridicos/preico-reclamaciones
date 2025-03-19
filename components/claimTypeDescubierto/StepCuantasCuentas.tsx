@@ -13,7 +13,6 @@ type StepComponentProps = {
     isInFireBase: boolean
   ) => void;
   goToStep: (stepId: string) => void;
-  
 };
 
 const StepCuantasCuentas: React.FC<StepComponentProps> = ({
@@ -26,12 +25,11 @@ const StepCuantasCuentas: React.FC<StepComponentProps> = ({
   const styles = createStyles(isDarkMode);
 
   const handleNextSingle = () => {
-    updateData(stepId, { ...data, cantidadCuentas: 1 });
+    updateData(stepId, { cantidadCuentas: 1 }, false);
     goToStep("6b");
   };
 
   const handleNextMultiple = () => {
-    // updateData(stepId, { ...data, cantidadCuentas: "varias" });
     goToStep("6a");
   };
 

@@ -100,6 +100,10 @@ const StepConfirmarDireccion: React.FC<StepComponentProps> = ({
         <TextInput
           style={styles.formInput}
           value={initialValues.address}
+          onChangeText={(text) => {
+            setInitialValues({ address: text });
+            updateData(stepId, { address: text }, true);
+          }}
           placeholder="Dirección"
           keyboardType="default"
           autoCapitalize="characters"

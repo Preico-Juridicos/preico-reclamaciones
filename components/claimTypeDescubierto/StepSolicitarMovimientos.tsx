@@ -32,7 +32,6 @@ const StepSolicitarMovimientos: React.FC<StepComponentProps> = ({
   //   }, [currentStep, updateStep]);
 
   const handleNextStep = () => {
-    // updateData(stepId, { ...data, selectedOption: "A" });
     goToStep("5");
   };
 
