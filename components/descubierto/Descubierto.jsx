@@ -1,12 +1,12 @@
-// src/components/descubierto/Descubierto.jsx
 import React, { useEffect, useState } from "react";
-import { KeyboardAvoidingView } from "react-native";
+import { KeyboardAvoidingView, View } from "react-native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import { createStyles } from "../../constants/styles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { firestore, getCurrentUserId } from "../../constants/firebaseConfig";
+
+import { firestore, getCurrentUserId } from "@/firebase.config";
 import { doc, getDoc } from "firebase/firestore";
+
 import StepQueEs from "./StepQueEs";
 import StepComoLoSe from "./StepComoLoSe";
 import StepTienesMovimientos from "./StepTienesMovimientos";
@@ -27,20 +27,26 @@ import StepGenerarDocumentos from "./StepGenerarDocumentos";
 import Summary from "./Summary";
 import ProgressBar from "../ProgressBar";
 
-const Stack = createStackNavigator();
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
+import { Text } from "react-native";
+
+import { NavigationIndependentTree } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+
+const Stack = createNativeStackNavigator();
 
 const Descubierto = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 14;
   const route = useRoute();
-    const navigation = useNavigation();
-  const styles = createStyles();
+  const navigation = useNavigation();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   useEffect(() => {
     const currentStep = route.params?.currentStep || null;
     const claimId = route.params?.claimId || null;
-    // console.log(claimId);
-    // console.log(currentStep);
 
     if (currentStep !== null || claimId !== null) {
       // cargar los datos al async storage y luego navegar al paso correspondiente
@@ -66,7 +72,7 @@ const Descubierto = () => {
                 [claimId]: data,
               });
               await AsyncStorage.setItem("formData", formData);
-            //   console.log(formData);
+              //   console.log(formData);
             }
           }
         } catch (error) {
@@ -89,191 +95,193 @@ const Descubierto = () => {
           break;
       }
     }
+
+    console.log("Cargado");
   }, []);
 
   useEffect(() => {
-    // console.log("Updating step:", currentStep);
     updateStep(currentStep);
   }, [currentStep]);
 
   const updateStep = (step) => {
-    // console.log("Updating to step:", step); // Añadir este log para verificar
     setCurrentStep(step);
   };
 
   return (
     <KeyboardAvoidingView style={styles.formMainView}>
-      <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
-      <Stack.Navigator
-        initialRouteName="StepQueEs"
-        screenOptions={{
-          headerShown: false,
-          animationEnabled: false,
-        }}
-      >
-        <Stack.Screen name="StepQueEs">
-          {(props) => (
-            <StepQueEs
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepComoLoSe">
-          {(props) => (
-            <StepComoLoSe
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepTienesMovimientos">
-          {(props) => (
-            <StepTienesMovimientos
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepSolicitarMovimientos">
-          {(props) => (
-            <StepSolicitarMovimientos
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepReclamacionAhora">
-          {(props) => (
-            <StepReclamacionAhora
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepCuantasCuentas">
-          {(props) => (
-            <StepCuantasCuentas
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepCuantasCuentas1">
-          {(props) => (
-            <StepCuantasCuentas1
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepBanco">
-          {(props) => (
-            <StepBanco
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepNumeroCuenta">
-          {(props) => (
-            <StepNumeroCuenta
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepComisiones">
-          {(props) => (
-            <StepComisiones
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepQuienEnvia">
-          {(props) => (
-            <StepQuienEnvia
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepUploadDNI">
-          {(props) => (
-            <StepUploadDNI
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepDNI">
-          {(props) => (
-            <StepDNI
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepConfirmarDireccion">
-          {(props) => (
-            <StepConfirmarDireccion
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepRevisionDocumentos">
-          {(props) => (
-            <StepRevisionDocumentos
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepPeticionPR">
-          {(props) => (
-            <StepPeticionPR
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="StepGenerarDocumentos">
-          {(props) => (
-            <StepGenerarDocumentos
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-        <Stack.Screen name="Summary">
-          {(props) => (
-            <Summary
-              {...props}
-              currentStep={currentStep}
-              updateStep={updateStep}
-            />
-          )}
-        </Stack.Screen>
-      </Stack.Navigator>
+      <NavigationIndependentTree>
+        <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
+        <Stack.Navigator
+          initialRouteName="StepQueEs"
+          screenOptions={{
+            headerShown: false,
+            animationEnabled: false,
+          }}
+        >
+          <Stack.Screen name="StepQueEs">
+            {(props) => (
+              <StepQueEs
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepComoLoSe">
+            {(props) => (
+              <StepComoLoSe
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepTienesMovimientos">
+            {(props) => (
+              <StepTienesMovimientos
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepSolicitarMovimientos">
+            {(props) => (
+              <StepSolicitarMovimientos
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepReclamacionAhora">
+            {(props) => (
+              <StepReclamacionAhora
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepCuantasCuentas">
+            {(props) => (
+              <StepCuantasCuentas
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepCuantasCuentas1">
+            {(props) => (
+              <StepCuantasCuentas1
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepBanco">
+            {(props) => (
+              <StepBanco
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepNumeroCuenta">
+            {(props) => (
+              <StepNumeroCuenta
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepComisiones">
+            {(props) => (
+              <StepComisiones
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepQuienEnvia">
+            {(props) => (
+              <StepQuienEnvia
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepUploadDNI">
+            {(props) => (
+              <StepUploadDNI
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepDNI">
+            {(props) => (
+              <StepDNI
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepConfirmarDireccion">
+            {(props) => (
+              <StepConfirmarDireccion
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepRevisionDocumentos">
+            {(props) => (
+              <StepRevisionDocumentos
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepPeticionPR">
+            {(props) => (
+              <StepPeticionPR
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="StepGenerarDocumentos">
+            {(props) => (
+              <StepGenerarDocumentos
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+          <Stack.Screen name="Summary">
+            {(props) => (
+              <Summary
+                {...props}
+                currentStep={currentStep}
+                updateStep={updateStep}
+              />
+            )}
+          </Stack.Screen>
+        </Stack.Navigator>
+      </NavigationIndependentTree>
     </KeyboardAvoidingView>
   );
 };

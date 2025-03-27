@@ -6,7 +6,9 @@ import {
   StyleSheet,
   Text,
 } from "react-native";
-import { createStyles } from "../constants/styles";
+
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 const QuantityInput = ({
   min = 0,
@@ -17,7 +19,8 @@ const QuantityInput = ({
   onDecrease,
   ...inputProps
 }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   const [quantity, setQuantity] = useState(value);
 
@@ -93,10 +96,10 @@ const InputStyles = StyleSheet.create({
     padding: 10,
     justifyContent: "center",
     alignItems: "center",
-    width: 60
+    width: 60,
   },
   buttonText: {
-    color: "#fff",  // cambiar por theme.text
+    color: "#fff", // cambiar por theme.text
     fontSize: 26,
   },
   leftButton: {

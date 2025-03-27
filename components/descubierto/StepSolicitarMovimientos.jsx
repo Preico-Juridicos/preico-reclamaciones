@@ -2,10 +2,12 @@ import React, { useEffect } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
 import CollapsibleView from "../CollapsibleView";
-import { createStyles } from "../../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 const StepSolicitarMovimientos = ({ navigation, currentStep, updateStep }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   useEffect(() => {
     if (currentStep !== 4) {
@@ -32,7 +34,8 @@ const StepSolicitarMovimientos = ({ navigation, currentStep, updateStep }) => {
   return (
     <ScrollView style={styles.formContainer}>
       <Text style={styles.formTitle}>
-        ¿Quieres que preparemos un formulario para pedir los movimientos de tu cuenta bancaria?
+        ¿Quieres que preparemos un formulario para pedir los movimientos de tu
+        cuenta bancaria?
       </Text>
       <Text style={styles.collapsibleContentText}>
         Despliega una de las opciones.

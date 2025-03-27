@@ -15,7 +15,7 @@ import {
   getDocs,
   //   Timestamp,
 } from "firebase/firestore";
-import { firestore, getCurrentUserId } from "../constants/firebaseConfig";
+import { firestore, getCurrentUserId } from "@/firebase.config";
 // import { format } from "date-fns";
 import { useNavigation } from "@react-navigation/native"; // Mantén este hook
 

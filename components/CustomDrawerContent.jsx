@@ -1,10 +1,15 @@
 import React from "react";
 import { View, Text, Switch, Image } from "react-native";
-import { DrawerContentScrollView, DrawerItemList, DrawerItem } from "@react-navigation/drawer";
-import { useTheme } from "../contexts/ThemeContext";
-import { createStyles } from "../constants/styles";
+import {
+  DrawerContentScrollView,
+  DrawerItemList,
+  DrawerItem,
+} from "@react-navigation/drawer";
+
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 import { MaterialIcons, FontAwesome } from "@expo/vector-icons";
-import { auth } from "../constants/firebaseConfig";
+import { auth } from "@/firebase.config";
 
 const CustomDrawerContent = (props) => {
   const { isDarkMode, toggleTheme } = useTheme();
@@ -41,13 +46,17 @@ const CustomDrawerContent = (props) => {
           label="Ajustes"
           onPress={() => props.navigation.navigate("Ajustes")}
           labelStyle={{ color: styles.title.color }}
-          icon={({ color, size }) => <MaterialIcons name="settings" color={color} size={size} />}
+          icon={({ color, size }) => (
+            <MaterialIcons name="settings" color={color} size={size} />
+          )}
         />
         <DrawerItem
           label="Cerrar sesión"
           onPress={handleSignOut}
           labelStyle={{ color: styles.title.color }}
-          icon={({ color, size }) => <FontAwesome name="sign-out" color={color} size={size} />}
+          icon={({ color, size }) => (
+            <FontAwesome name="sign-out" color={color} size={size} />
+          )}
         />
       </View>
 

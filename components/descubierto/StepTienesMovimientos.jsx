@@ -1,10 +1,12 @@
 import React, { useEffect } from "react";
 import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
-import { createStyles } from "../../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 const StepTienesMovimientos = ({ navigation, currentStep, updateStep }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   useEffect(() => {
     if (currentStep !== 3) {
@@ -20,7 +22,7 @@ const StepTienesMovimientos = ({ navigation, currentStep, updateStep }) => {
     // updateStep(4);
     navigation.navigate("StepSolicitarMovimientos");
   };
-  
+
   const handlePreviousStep = () => {
     navigation.goBack();
   };
@@ -32,11 +34,8 @@ const StepTienesMovimientos = ({ navigation, currentStep, updateStep }) => {
       </Text>
       <View style={{ gap: 10 }}>
         <PrimaryButton onPress={handleNextStep} title="Sí" />
-        <SecondaryButton
-          onPress={handleNextStep2}
-          title="No"
-        />
-        
+        <SecondaryButton onPress={handleNextStep2} title="No" />
+
         <SecondaryButton title="Atrás" onPress={handlePreviousStep} />
       </View>
     </ScrollView>

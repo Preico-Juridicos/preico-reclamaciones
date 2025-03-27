@@ -6,14 +6,16 @@ import * as Yup from "yup";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
 import Dialog from "react-native-dialog";
-import { sendBankEmailNotification } from "../../services/emailService";
-import { createStyles } from "../../constants/styles";
+import { sendBankEmailNotification } from "@api/emailService";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
-import { firestore, getCurrentUserId } from "../../constants/firebaseConfig";
+import { firestore, getCurrentUserId } from "@/firebase.config";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 
 const StepBanco = ({ navigation, currentStep, updateStep }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   const [banks, setBanks] = useState([]); // Lista de bancos obtenidos
   const [value, setValue] = useState(null);
@@ -77,7 +79,7 @@ const StepBanco = ({ navigation, currentStep, updateStep }) => {
       const formData = existingData ? JSON.parse(existingData) : {};
       const updatedData = { ...formData, [docRef.id]: values };
       await AsyncStorage.setItem("formData", JSON.stringify(updatedData));
-// console.log(JSON.stringify(updatedData));
+      // console.log(JSON.stringify(updatedData));
       navigation.navigate("StepNumeroCuenta");
     } catch (error) {
       console.error(error);
@@ -109,9 +111,7 @@ const StepBanco = ({ navigation, currentStep, updateStep }) => {
 
   return (
     <ScrollView style={styles.formContainer}>
-      <Text style={styles.formTitle}>
-        Selecciona tu entidad bancaria.
-      </Text>
+      <Text style={styles.formTitle}>Selecciona tu entidad bancaria.</Text>
 
       <Formik
         initialValues={{ entidadBancaria: "" }}

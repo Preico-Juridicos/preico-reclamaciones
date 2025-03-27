@@ -4,10 +4,12 @@ import { Formik } from "formik";
 import * as Yup from "yup";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
-import { createStyles } from "../../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 const StepNumeroCuenta = ({ navigation, currentStep, updateStep }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
   const [initialValues, setInitialValues] = useState({ numeroCuenta: "" });
 
   useEffect(() => {
@@ -17,7 +19,8 @@ const StepNumeroCuenta = ({ navigation, currentStep, updateStep }) => {
         if (data !== null) {
           const formData = JSON.parse(data);
           setInitialValues({
-            numeroCuenta: formData.numeroCuenta || "ES23 2323 2323 2323 2323 2323",
+            numeroCuenta:
+              formData.numeroCuenta || "ES23 2323 2323 2323 2323 2323",
           });
         }
       } catch (error) {

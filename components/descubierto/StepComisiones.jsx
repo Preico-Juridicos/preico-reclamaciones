@@ -13,11 +13,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { format } from "date-fns";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
-import { createStyles } from "../../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
+
 import { useFocusEffect } from "@react-navigation/native"; // Importar el hook de navegación
 
 const StepComisiones = ({ navigation, currentStep, updateStep }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   // Estado para los valores iniciales cargados de AsyncStorage
   const [fetchedValues, setFetchedValues] = useState({

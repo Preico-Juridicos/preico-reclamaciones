@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, Alert } from "react-native";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
-import { createStyles } from "../../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { doc, setDoc } from "firebase/firestore";
-import { firestore, getCurrentUserId } from "../../constants/firebaseConfig";
+import { firestore, getCurrentUserId } from "@/firebase.config";
 
 const StepPeticionPR = ({ navigation, currentStep, updateStep }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
   const [cantidadCuentas, setCantidadCuentas] = useState(1);
 
   useEffect(() => {

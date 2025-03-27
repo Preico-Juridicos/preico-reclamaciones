@@ -1,7 +1,7 @@
 import React from "react";
 import { Text, Pressable } from "react-native";
-import { useTheme } from "../contexts/ThemeContext";
-import { createStyles } from "../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 const PrimaryButton = (props) => {
   const {
@@ -16,14 +16,18 @@ const PrimaryButton = (props) => {
 
   return (
     <Pressable
-      style={[styles.buttonPrimary, btnStyle, disabled && styles.disabled]}
-      onPress={onPress}
+      style={[
+        styles.buttonPrimary,
+        btnStyle,
+        disabled && styles.buttonDisabled,
+      ]}
+      onPress={disabled ? undefined : onPress}
     >
       <Text
         style={[
           styles.buttonTextPrimary,
           textStyle,
-          disabled && styles.disabled,
+          disabled && styles.buttonTextDisabled,
         ]}
       >
         {title}
@@ -45,14 +49,18 @@ const SecondaryButton = (props) => {
 
   return (
     <Pressable
-      style={[styles.buttonSecondary, btnStyle, disabled && styles.disabled]}
-      onPress={onPress}
+      style={[
+        styles.buttonSecondary,
+        btnStyle,
+        disabled && styles.buttonDisabled,
+      ]}
+      onPress={disabled ? undefined : onPress}
     >
       <Text
         style={[
           styles.buttonTextSecondary,
           textStyle,
-          disabled && styles.disabled,
+          disabled && styles.buttonTextDisabled,
         ]}
       >
         {title}

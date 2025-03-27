@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Switch, Image } from "react-native";
 import {
   DrawerContentScrollView,
@@ -10,10 +10,12 @@ import createStyles from "@/assets/styles/themeStyles";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { auth } from "@api/firebase";
 import { TouchableOpacity } from "react-native-gesture-handler";
+import { getCurrentUserId } from "@/firebase.config";
 
 export default function CustomDrawerContent(props: any) {
   const { isDarkMode, toggleTheme } = useTheme();
   const style = createStyles(isDarkMode);
+  const userId = getCurrentUserId();
 
   const handleSignOut = async () => {
     try {
@@ -21,6 +23,14 @@ export default function CustomDrawerContent(props: any) {
       props.navigation.reset({ index: 0, routes: [{ name: "auth/initial" }] });
     } catch (error: any) {
       console.error("Error al cerrar sesión:", error.message);
+    }
+  };
+
+  const handleSignIn = async () => {
+    try {
+      props.navigation.reset({ index: 0, routes: [{ name: "auth/initial" }] });
+    } catch (error: any) {
+      console.error("Error al iniciar sesión:", error.message);
     }
   };
 
@@ -68,6 +78,7 @@ export default function CustomDrawerContent(props: any) {
           );
         }}
         style={{
+          display: !userId ? "none" : "flex",
           paddingLeft: 10,
           borderRadius: 0,
           backgroundColor:
@@ -77,8 +88,8 @@ export default function CustomDrawerContent(props: any) {
         }}
       />
       <DrawerItem
-        label="Cerrar sesión"
-        onPress={handleSignOut}
+        label={!userId ? "Iniciar sesión" : "Cerrar sesión"}
+        onPress={!userId ? handleSignIn : handleSignOut}
         labelStyle={style.drawerItemText}
         icon={({ size }) => (
           <FontAwesome

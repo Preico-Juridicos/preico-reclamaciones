@@ -11,11 +11,11 @@ import {
 } from "react-native";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
 import * as ImagePicker from "expo-image-picker";
-import { scanDocument } from "../../services/dniApiService";
+import { scanDocument } from "@api/dniApiService";
 import { doc, setDoc, getDoc } from "firebase/firestore";
-import { firestore } from "../../constants/firebaseConfig";
-import { getCurrentUserId } from "../../constants/firebaseConfig";
-import { createStyles } from "../../constants/styles";
+import { firestore, getCurrentUserId } from "@/firebase.config";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 const StepUploadDNI = ({ navigation, currentStep, updateStep }) => {
   const styles = createStyles();
@@ -111,7 +111,7 @@ const StepUploadDNI = ({ navigation, currentStep, updateStep }) => {
 
   const handleUpload = async () => {
     if (!dniFront || !dniBack) {
-    //   Alert.alert("Sube las dos imágenes primero.");
+      //   Alert.alert("Sube las dos imágenes primero.");
       return;
     }
     setIsUploading(true);

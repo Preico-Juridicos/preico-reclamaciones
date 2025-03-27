@@ -1,75 +1,130 @@
-import { Text, View, StyleSheet, TouchableOpacity, TextInput } from "react-native";
-import { useState } from "react";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { app } from "@/firebase.config";
-
-export default function register() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const auth = getAuth(app);
-
-  async function handleSignUp() {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-      console.log("Usuario registrado:", user);
-    } catch (error) {
-      console.error("Error al registrar usuario:", error.message);
+import {
+    Text,
+    View,
+    StyleSheet,
+    TouchableOpacity,
+    TextInput,
+    Alert,
+  } from "react-native";
+  import { useState } from "react";
+  import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+  import { app } from "@/firebase.config";
+  import { getFirestore, doc, setDoc, collection } from "firebase/firestore";
+  import { useNavigation } from "expo-router";
+  import { useTheme } from "@/contexts/ThemeContext";
+  import createStyles from "@/assets/styles/themeStyles";
+  import { FirebaseError } from "firebase/app";
+  
+  export default function Register() {
+    const { isDarkMode } = useTheme();
+    const style = createStyles(isDarkMode);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [username, setUsername] = useState("");
+  
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const navigation = useNavigation();
+  
+    async function handleSignUp() {
+      if (password !== confirmPassword) {
+        Alert.alert("Error", "Las contraseñas no coinciden.");
+        return;
+      }
+  
+      try {
+        // Registrar usuario con Firebase Authentication
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
+        const user = userCredential.user;
+  
+        // Crear documento en Firestore
+        await setDoc(doc(db, "usuarios", user.uid), {
+          username,
+          email,
+          createdAt: new Date().toISOString(),
+        });
+  
+        // Crear colección "configuraciones" dentro del usuario
+        const userConfigRef = collection(db, `usuarios/${user.uid}/configuraciones`);
+        await setDoc(doc(userConfigRef, "privacidad"), {
+          analyticsConsent: false,
+          marketingConsent: false,
+          functionalConsent: false,
+          deleteRequest: false,
+          deleteRequestDate: null,
+          notificationsEnabled: true,
+          showUserName: true,
+        });
+  
+        console.log("Usuario registrado y configuraciones creadas:", user.email);
+        Alert.alert("Registro exitoso", "Usuario creado correctamente");
+        // navigation.navigate("auth/login");
+      } catch (error) {
+        const firebaseError = error as FirebaseError;
+        console.error("Error al registrar usuario:", firebaseError.message);
+        Alert.alert("Error", firebaseError.message);
+      }
     }
+  
+    return (
+      <View
+        style={[
+          style.mainContainer,
+          {
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 20,
+          },
+        ]}
+      >
+        <TextInput
+          style={[style.formInput, { width: "100%" }]}
+          placeholder="Nombre de usuario"
+          placeholderTextColor={style.text.color}
+          onChangeText={setUsername}
+          value={username}
+        />
+        <TextInput
+          style={[style.formInput, { width: "100%" }]}
+          placeholder="Correo Electrónico"
+          placeholderTextColor={style.text.color}
+          onChangeText={setEmail}
+          value={email}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={[style.formInput, { width: "100%" }]}
+          placeholder="Contraseña"
+          placeholderTextColor={style.text.color}
+          onChangeText={setPassword}
+          value={password}
+          secureTextEntry
+        />
+        <TextInput
+          style={[style.formInput, { width: "100%" }]}
+          placeholder="Confirmar Contraseña"
+          placeholderTextColor={style.text.color}
+          onChangeText={setConfirmPassword}
+          value={confirmPassword}
+          secureTextEntry
+        />
+        <TouchableOpacity style={style.formButton} onPress={handleSignUp}>
+          <Text style={style.formButtonText}>Registrar</Text>
+        </TouchableOpacity>
+  
+        <TouchableOpacity
+          onPress={() => navigation.navigate("auth/login")}
+          style={{ marginTop: 20 }}
+        >
+          <Text style={style.formLink}>Ya tengo cuenta</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
-
-  return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Correo Electrónico"
-        onChangeText={setEmail}
-        value={email}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        onChangeText={setPassword}
-        value={password}
-        secureTextEntry
-      />
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Registrar</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#f5f5f5",
-  },
-  input: {
-    width: "100%",
-    height: 50,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    marginBottom: 20,
-    fontSize: 16,
-  },
-  button: {
-    margin: 10,
-    padding: 10,
-    backgroundColor: "#4285F4",
-    borderRadius: 5,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-});

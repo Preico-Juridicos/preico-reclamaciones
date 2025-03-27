@@ -12,8 +12,8 @@ import Descubierto from "./descubierto/Descubierto";
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
-import { useTheme } from "../contexts/ThemeContext";
-import { createStyles } from "../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 // Images
 import claimsDescubierto from "../assets/images/claimsDescubierto.png";

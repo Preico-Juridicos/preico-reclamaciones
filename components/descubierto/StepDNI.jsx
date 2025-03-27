@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { doc, getDoc } from "firebase/firestore";
-import { firestore, getCurrentUserId } from "../../constants/firebaseConfig";
+import { firestore, getCurrentUserId } from "@/firebase.config";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
-import { createStyles } from "../../constants/styles";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 const getUserInfo = async (docId) => {
   const usuarioRef = doc(firestore, "usuarios", docId);
@@ -27,7 +28,8 @@ const getUserInfo = async (docId) => {
 };
 
 const StepDNI = ({ navigation, currentStep, updateStep }) => {
-  const styles = createStyles();
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   const [userData, setUserData] = useState({
     userId: "",

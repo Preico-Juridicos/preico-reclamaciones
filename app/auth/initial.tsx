@@ -3,8 +3,12 @@ import { useRouter } from "expo-router";
 import { auth } from "@api/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { View, ActivityIndicator } from "react-native";
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 export default function initial() {
+  const { isDarkMode } = useTheme();
+  const style = createStyles(isDarkMode);
   const router = useRouter();
 
   useEffect(() => {
@@ -20,7 +24,6 @@ export default function initial() {
     // Limpia el listener
     return () => unsubscribe();
   }, [router]);
-
 
   return (
     <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>

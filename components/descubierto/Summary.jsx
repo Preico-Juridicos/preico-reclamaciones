@@ -12,7 +12,7 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { getFirestore, doc, getDoc,addDoc,collection } from "firebase/firestore"; // Importaciones necesarias
 import { useRoute } from "@react-navigation/native"; // Hook para acceder a route params
-import { firestore, getCurrentUserId } from "../../constants/firebaseConfig";
+import { firestore, getCurrentUserId } from "@/firebase.config";
 import { PrimaryButton, SecondaryButton } from "../../components/Buttons";
 
 const Summary = ({ navigation }) => {

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { View, Text, TouchableWithoutFeedback, Animated } from "react-native";
-import { createStyles } from "../constants/styles";
+
+import { useTheme } from "@/contexts/ThemeContext";
+import createStyles from "@/assets/styles/themeStyles";
 
 const CollapsibleView = ({
   title,
@@ -12,7 +14,9 @@ const CollapsibleView = ({
 }) => {
   const [collapsed, setCollapsed] = useState(true);
   const animation = useState(new Animated.Value(0))[0];
-  const styles = createStyles();
+  
+  const { isDarkMode } = useTheme();
+  const styles = createStyles(isDarkMode);
 
   const containerStyle = collapsibleContainerStyle || styles.collapsibleContainer;
   const headerStyle = collapsibleHeaderStyle || styles.collapsibleHeader;
