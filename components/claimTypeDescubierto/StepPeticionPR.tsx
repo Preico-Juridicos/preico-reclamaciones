@@ -5,8 +5,13 @@ import { useTheme } from "@/contexts/ThemeContext";
 import createStyles from "@/assets/styles/themeStyles";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { doc, setDoc } from "firebase/firestore";
-import { getUserData, getCurrentUserId } from "@/firebase.config";
+import { getUserData, getCurrentUserId, storage } from "@/firebase.config";
+import {
+  ref,
+  uploadBytes,
+  deleteObject,
+} from "firebase/storage";
+
 import { useRouter } from "expo-router";
 import { generatePR } from "@api/pdfGenerationService";
 
@@ -55,49 +60,82 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
     fetchData();
   }, []);
 
-  //   useEffect(() => {
-  //     if (currentStep !== 13) {
-  //       updateStep(13);
-  //     }
-  //   }, [currentStep, updateStep]);
+  const subirPdfDesdeUrl = async (pdfUrl: string, pdfName: string) => {
+    try {
+      const response = await fetch(pdfUrl);
+
+      if (!response.ok) {
+        throw new Error(
+          `Error al obtener el PDF: ${response.status} ${response.statusText}`
+        );
+      }
+
+      const blob = await response.blob();
+      const storageRef = ref(storage, `documents/${pdfName}`); // Nombre único
+      const metadata = {
+        contentType: "application/pdf",
+      };
+      const snapshot = await uploadBytes(storageRef, blob, metadata);
+      const downloadURL = `https://firebasestorage.googleapis.com/v0/b/${
+        storageRef.bucket
+      }/o/${encodeURIComponent(storageRef.fullPath)}?alt=media`;
+
+    //   console.log("PDF subido exitosamente:", downloadURL);
+      return downloadURL;
+    } catch (error) {
+      console.error("Error al subir el PDF desde la URL:", error);
+    }
+  };
+
+  const eliminarArchivoDelStorage = async (pdfName: string) => {
+    const storageRef = ref(storage, `documents/${pdfName}`);
+    await deleteObject(storageRef);
+  };
 
   const handleSubmitPR = async () => {
     try {
       const userID = getCurrentUserId();
       if (!userID) return;
+      const userD = await getUserData(userID);
+      if (!userD) {
+        throw new Error("No se ha podido obtener los datos del usuario");
+      }
       if (!claimCode) return;
       //   console.log(claimCode);
-      updateData(claimCode, { hasPR: false }, true);
+      await updateData(claimCode, { hasPR: false }, true);
 
       //   console.log(data[claimCode]);
       const pdfData = {
-        nombre: data[claimCode].nombreCompleto,
-        dni: data[claimCode].dni,
+        nombre: userD.name?.toUpperCase() + " " + userD.surnames?.toUpperCase(),
+        dni: userD.dni,
         direccion: data[claimCode].address,
+        cp: userD.postalCode,
       };
       //   Llamada sincrónica a la API para generar el PDF
       const pdfResponse = await generatePR({ claimCode, pdfData });
       if (!pdfResponse.success) {
         throw new Error("No se ha podido generar el PDF");
       }
-    //   console.log(pdfResponse.fileName);
-      console.log(pdfResponse.fileUrl);
+      //   console.log(pdfResponse.fileName);
+      //   console.log(data);
 
+      // Guardamos el PDF en el storage de Firebase
+      const newURL = await subirPdfDesdeUrl(
+        pdfResponse.fileUrl,
+        pdfResponse.fileName
+      );
+      //   console.log(newURL);
       //   Enviar el PDF a Firmafy
-      const userD = await getUserData(userID);
-      if (!userD) {
-        throw new Error("No se ha podido obtener los datos del usuario");
-      }
       const userData = {
-        nombre: data[claimCode].nombreCompleto,
-        dni: data[claimCode].dni,
+        nombre: userD.name + " " + userD.surnames,
+        dni: userD.dni,
         email: userD.email,
-        cargo: "Contratante", 
+        cargo: "Contratante",
         telefono: 697222324,
       };
       const firmafyResponse = await enviarSolicitudDeFirma(
         pdfResponse.fileName,
-        pdfResponse.fileUrl,
+        newURL,
         userData
       );
 
@@ -105,6 +143,8 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
       if (!firmafyResponse.success) {
         throw new Error("Error al enviar a Firmafy");
       }
+
+      await eliminarArchivoDelStorage(pdfResponse.fileName);
 
       Alert.alert(
         "Petición Enviada",
@@ -121,10 +161,10 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
         const newCantidadCuentas = cantidadCuentas - 1;
         setCantidadCuentas(newCantidadCuentas);
         await updateCantidadCuentasInStorage(newCantidadCuentas);
-        // goToStep("6b");
+        goToStep("6b");
       } else {
         await AsyncStorage.removeItem("formData");
-        // goToStep("-1");
+        handleGoHome();
       }
     } catch (error) {
       console.error("Error al enviar la petición:", error);

@@ -3,7 +3,7 @@ import axios from 'axios';
 const apiKey = 'AIzaSyB9HqCFD8fuYjIhxvH2Pq0SYy44zPQeDx8';
 const baseUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
 
-const getPostalCode = async (address) => {
+export const getPostalCode = async (address) => {
     try {
         const response = await axios.get(baseUrl, {
             params: {
@@ -24,5 +24,3 @@ const getPostalCode = async (address) => {
         throw error;
     }
 };
-
-export default getPostalCode;

@@ -1,12 +1,11 @@
-// firmaFyService.js
-
 import axios from "axios";
 
+// Endpoint de la API de Firmafy
 const FIRMAFY_ENDPOINT =
   "https://app.firmafy.com/ApplicationProgrammingInterface.php";
+
+// ID del entorno visual en Firmafy
 const id_show = "9044e9cdbe37563f523ca62a59d6e0aa";
-// const usuario = "app@preicojuridicos.com";
-// const password = "2E2uuF1#$9^J";
 
 /**
  * Método genérico para realizar solicitudes a la API de Firmafy.
@@ -16,7 +15,7 @@ const id_show = "9044e9cdbe37563f523ca62a59d6e0aa";
  */
 const makeFirmafyRequest = async (action, data = {}) => {
   try {
-    // Añadimos el action al objeto data
+    // Añadimos la acción al objeto data
     const params = {
       action,
       ...data,
@@ -57,7 +56,6 @@ const obtenerToken = async (usuario, password) => {
     const response = await makeFirmafyRequest("login", data);
 
     if (!response.error) {
-      // Retornamos el token obtenido
       return response.data;
     } else {
       throw new Error("Error en la autenticación: " + response.data);
@@ -78,38 +76,23 @@ const obtenerToken = async (usuario, password) => {
  */
 const solicitarFirma = async (token, signer, pdfOptions, options = {}) => {
   try {
-    // Construimos los datos para la solicitud
+    // Construimos los datos necesarios para la solicitud de firma
     const data = {
       token,
       id_show,
-      signer: JSON.stringify(signer),
+      signer: JSON.stringify(signer), // Convertimos el array de firmantes a string JSON
       ...options,
     };
 
-    // Determinamos cómo se enviará el PDF
-    let files = {};
-    if (pdfOptions.pdfFile) {
-      // Enviamos el PDF como archivo
-      files.pdf = pdfOptions.pdfFile;
-    } else if (pdfOptions.pdf_base64) {
-      // Enviamos el PDF en base64
-      data.pdf_base64 = pdfOptions.pdf_base64;
-      data.pdf_name = pdfOptions.pdf_name;
-    } else if (pdfOptions.pdf_url) {
-      // Enviamos el PDF mediante una URL pública
-      data.pdf_url = pdfOptions.pdf_url;
-      data.pdf_name = pdfOptions.pdf_name;
-    } else {
-      throw new Error("Debe proporcionar un PDF para la solicitud de firma.");
-    }
+    data.pdf_url = pdfOptions.pdfFile.uri;
+    data.pdf_name = pdfOptions.pdfFile.name;
 
-    const response = await makeFirmafyRequest("request", data, files);
+    const response = await makeFirmafyRequest("request", data);
 
-    if (!response.error) {
-      console.log("Solicitud de firma enviada correctamente:", response.data);
-      return response.data;
+    if (response.error === false) {
+      return response.message;
     } else {
-      throw new Error("Error en la solicitud de firma: " + response.data);
+      throw new Error("Error en la solicitud de firma: " + response.message);
     }
   } catch (error) {
     console.error("Error al solicitar la firma:", error.message);
@@ -117,4 +100,36 @@ const solicitarFirma = async (token, signer, pdfOptions, options = {}) => {
   }
 };
 
-export { makeFirmafyRequest, obtenerToken, solicitarFirma };
+/**
+ * Función para suscribirse a eventos de Webhook en Firmafy.
+ * @param {string} token - Token de sesión obtenido tras login.
+ * @param {number} type - Tipo de evento (1, 2 o 5).
+ * @param {number} method - Método de envío (1 para Array POST, 2 para JSON).
+ * @param {string} url_webhook - URL donde Firmafy enviará la notificación.
+ * @returns {Promise<Object>} - La respuesta de la API de Firmafy.
+ */
+const suscribirseWebhook = async (token, type, method, url_webhook) => {
+  try {
+    const data = {
+      token,
+      id_show,
+      type,
+      method,
+      url_webhook,
+    };
+
+    const response = await makeFirmafyRequest("webhook", data);
+
+    if (!response.error) {
+      return response.message;
+    } else {
+      throw new Error("Error en la suscripción al webhook: " + response.message);
+    }
+  } catch (error) {
+    console.error("Error al suscribirse al webhook:", error.message);
+    throw error;
+  }
+};
+
+// Exportamos las funciones para que puedan usarse en otros módulos
+export { makeFirmafyRequest, obtenerToken, solicitarFirma, suscribirseWebhook };

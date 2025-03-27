@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { initializeAuth, getReactNativePersistence } from "firebase/auth";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 import { Firestore, getFirestore, doc, getDoc } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
@@ -22,6 +23,7 @@ const auth = initializeAuth(app, {
 });
 const firestore = getFirestore(app);
 const database = getDatabase(app);
+const storage = getStorage(app);
 
 // Define el tipo UserType
 type UserType = {
@@ -33,6 +35,7 @@ type UserType = {
   name?: string;
   surnames?: string;
   nationality?: string;
+  postalCode?: string;
   whoSends?: string;
   hasPR?: boolean;
   hasPN?: boolean;
@@ -70,4 +73,12 @@ const getUserData = async (userId: string): Promise<UserType | null> => {
   }
 };
 
-export { app, auth, firestore, database, getCurrentUserId, getUserData };
+export {
+  app,
+  auth,
+  firestore,
+  database,
+  storage,
+  getCurrentUserId,
+  getUserData,
+};

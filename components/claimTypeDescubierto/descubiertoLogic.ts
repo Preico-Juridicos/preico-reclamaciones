@@ -139,12 +139,14 @@ export const handlePeticionPRStepEvent = async (
 ) => {
   console.log("Evento personalizado para el paso PR:");
 
-  console.log(claimId);
-  if (claimId !== null) {
-    console.log(data[claimId].hasPR);
-    if (data[claimId].hasPR) {
-      await setDataToFirestore(claimId, "16", "hasPR", data[claimId].hasPR);
-    }
+//   console.log(claimId);
+//   console.log(data);
+  if (
+    claimId !== null &&
+    data.hasOwnProperty(claimId) &&
+    data[claimId].hasOwnProperty("hasPR")
+  ) {
+    await setDataToFirestore(claimId, "15", "hasPR", data[claimId].hasPR);
   }
 };
 

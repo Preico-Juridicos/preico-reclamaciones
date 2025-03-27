@@ -64,6 +64,7 @@ const loadClaimDataFromFirebase = async (claimCode: string) => {
 // Tipos
 type StepComponentProps = {
   stepId: string;
+  previousStepId?: string;
   data: Record<string, any>;
   claimIdentifier?: string;
   updateData: (
@@ -104,6 +105,7 @@ const ClaimForm: React.FC = () => {
     {}
   );
   const [currentStepId, setCurrentStepId] = useState<string>("1");
+  const [previousStepId, setPrevStepId] = useState<string>("1");
   const [canContinue, setCanContinue] = useState<boolean>(true);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
   const [claimIdentifier, setClaimIdentifier] = useState<string | null>(null);
@@ -153,7 +155,7 @@ const ClaimForm: React.FC = () => {
         component: StepPeticionPR,
         onNext: handlePeticionPRStepEvent,
       },
-      { id: "17", component: StepGenerarDocumentos },
+      { id: "17", component: StepGenerarDocumentos, isBranching: true },
       { id: "18", component: Summary },
     ],
   };
@@ -213,7 +215,7 @@ const ClaimForm: React.FC = () => {
         setCanContinue(false);
         setNavigationHistory([]);
         setClaimIdentifier(null);
-        setClaimCode(undefined); // <-- Añadir esta línea
+        setClaimCode(undefined); 
         setClaimTitle(null);
 
         // Limpiar AsyncStorage
@@ -308,6 +310,7 @@ const ClaimForm: React.FC = () => {
         return;
       }
       setNavigationHistory((prev) => [...prev, currentStepId]);
+      setPrevStepId(navigationHistory[navigationHistory.length - 1]);
       setCurrentStepId(stepId);
     } catch (error) {
       console.error("Error en handleOnNextEvents:", error);
@@ -419,6 +422,7 @@ const ClaimForm: React.FC = () => {
       <View style={styles.claimStepContainer}>
         <CurrentStepComponent
           stepId={currentStepId}
+          previousStepId={previousStepId}
           data={formData}
           updateData={updateData}
           goToStep={goToStep}

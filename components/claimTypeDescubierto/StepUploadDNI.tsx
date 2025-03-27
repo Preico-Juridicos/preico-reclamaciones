@@ -18,9 +18,11 @@ import { useTheme } from "@/contexts/ThemeContext";
 import createStyles from "@/assets/styles/themeStyles";
 
 import { getPostalCode } from "@api/postalcodeAPIService";
+import { set } from "date-fns";
 
 type StepComponentProps = {
   stepId: string;
+  previousStepId?: string;
   data: Record<string, any>;
   updateData: (
     stepId: string,
@@ -33,6 +35,7 @@ type StepComponentProps = {
 
 const StepUploadDNI: React.FC<StepComponentProps> = ({
   stepId,
+  previousStepId,
   data,
   updateData,
   goToStep,
@@ -46,6 +49,7 @@ const StepUploadDNI: React.FC<StepComponentProps> = ({
 
   useEffect(() => {
     const checkDniExists = async () => {
+      //   await new Promise((resolve) => setTimeout(resolve, 2000));
       try {
         const userId = getCurrentUserId();
         if (!userId) {
@@ -55,8 +59,12 @@ const StepUploadDNI: React.FC<StepComponentProps> = ({
         const docRef = doc(firestore, "usuarios", userId);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists() && docSnap.data().dni) {
+          console.log(previousStepId);
+          if (previousStepId !== "10") {
+            goToStep("12");
+          }
           //   navigation.navigate("StepDNI");
-          goToStep("12");
+          setCanContinue(true);
         }
       } catch (error) {
         console.error("Error al verificar el DNI en Firestore: ", error);
@@ -141,6 +149,14 @@ const StepUploadDNI: React.FC<StepComponentProps> = ({
     try {
       const scanDataFront = await scanDocument(dniFront);
       const scanDataBack = await scanDocument(dniBack);
+      let postalCode = "-";
+      try {
+        postalCode = await getPostalCode(scanDataBack.address);
+        console.log("Código Postal obtenido:", postalCode);
+      } catch (error) {
+        console.error("Error al obtener el código postal:", error);
+      }
+
       let data = {
         dni: scanDataFront.idNumber,
         name: scanDataBack.name,
@@ -150,17 +166,11 @@ const StepUploadDNI: React.FC<StepComponentProps> = ({
         bornDate: scanDataFront.bornDate,
         expireDate: scanDataFront.expireDate,
         address: scanDataBack.address,
+        postalCode: postalCode,
       };
       setDniFront(null);
       setDniBack(null);
       setIsFrontCaptured(false);
-      //Añadir el buscar el codigo postal
-      try {
-        const postalCode = await getPostalCode(data.address);
-        console.log("Código Postal obtenido:", postalCode);
-      } catch (error) {
-        console.error("Error al obtener el código postal:", error);
-      }
 
       const savedData = await saveToFirestore(data);
       if (savedData) {

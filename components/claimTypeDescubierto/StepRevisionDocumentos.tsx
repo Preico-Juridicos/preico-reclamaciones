@@ -44,10 +44,10 @@ const StepRevisionDocumentos: React.FC<StepComponentProps> = ({
         const { hasPR } = data[claimCode];
         console.log(hasPR);
         if (hasPR) {
-          updateData(stepId, { hasPR: true }, true);
-          goToStep("15");
+        //   updateData(stepId, { hasPR: true }, true);
+          goToStep("17");
         } else {
-          updateData(stepId, { hasPR: false }, true);
+        //   updateData(stepId, { hasPR: false }, true);
           goToStep("16");
         }
       }
