@@ -19,9 +19,11 @@ import {
   firestore,
 } from "@/firebase.config";
 import { ref, uploadBytes, deleteObject } from "firebase/storage";
-import { generateComisionDescubierto } from "@/api/pdfGenerationService";
+import { generateComisionDescubierto, } from "@/api/pdfGenerationService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { collection, getDocs } from "firebase/firestore";
+import { enviarSolicitudDeFirma } from "@api/firmaFyServicePR";
+
 
 interface Comision {
   fecha: string;
@@ -203,23 +205,23 @@ const StepGenerarDocumentos: React.FC<StepComponentProps> = ({
       );
       console.log(newURL);
       //   Enviar el PDF a Firmafy
-      //   const userData = {
-      //     nombre: userD.name + " " + userD.surnames,
-      //     dni: userD.dni,
-      //     email: userD.email,
-      //     cargo: "Contratante",
-      //     telefono: 697222324,
-      //   };
-      //   const firmafyResponse = await enviarSolicitudDeFirma(
-      //     pdfResponse.fileName,
-      //     newURL,
-      //     userData
-      //   );
+        const userData = {
+          nombre: userD.name + " " + userD.surnames,
+          dni: userD.dni,
+          email: userD.email,
+          cargo: "Contratante",
+          telefono: 697222324,
+        };
+        const firmafyResponse = await enviarSolicitudDeFirma(
+          pdfResponse.fileName,
+          newURL,
+          userData
+        );
 
-      //   console.log(firmafyResponse);
-      //   if (!firmafyResponse.success) {
-      //     throw new Error("Error al enviar a Firmafy");
-      //   }
+        console.log(firmafyResponse);
+        if (!firmafyResponse.success) {
+          throw new Error("Error al enviar a Firmafy");
+        }
 
       //   await eliminarArchivoDelStorage(pdfResponse.fileName);
     } catch (error) {
@@ -233,7 +235,8 @@ const StepGenerarDocumentos: React.FC<StepComponentProps> = ({
 
   return (
     <ScrollView style={styles.formContainer}>
-      <Text style={styles.formTitle}>¿Generamos el documento ahora?</Text>
+      <Text style={styles.formTitle}></Text>
+      <Text style={styles.formText}>Genial, vemos que ya has firmado el poder de representación, ¿Generamos la reclamación ahora?</Text>
       <View style={styles.formNavigationButtonsContainer}>
         <PrimaryButton title="Sí" onPress={handleGenerateDocument} />
         <SecondaryButton title="Más adelante" onPress={handleGoHome} />

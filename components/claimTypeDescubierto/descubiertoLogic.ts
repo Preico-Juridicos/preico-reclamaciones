@@ -133,20 +133,33 @@ export const handleQuienEnviaStepEvent = async (
   }
 };
 
+export const handleTelefonoStepEvent = async (
+  data: Record<string, any>,
+  claimId: string | null = null
+) => {
+  //   console.log("Evento personalizado para el paso Direccion:", data);
+
+  if (claimId !== null) {
+    if (data[claimId].phone) {
+      setDataToFirestore(claimId, "15", "phone", data[claimId].phone);
+    }
+  }
+};
 export const handlePeticionPRStepEvent = async (
   data: Record<string, any>,
   claimId: string | null = null
 ) => {
   console.log("Evento personalizado para el paso PR:");
 
-//   console.log(claimId);
-//   console.log(data);
-  if (
-    claimId !== null &&
-    data.hasOwnProperty(claimId) &&
-    data[claimId].hasOwnProperty("hasPR")
-  ) {
-    await setDataToFirestore(claimId, "15", "hasPR", data[claimId].hasPR);
+  console.log(claimId);
+  console.log(data);
+  if (claimId !== null) {
+    if (data.hasOwnProperty(claimId) && data[claimId].hasOwnProperty("hasPR")) {
+      await setDataToFirestore(claimId, "16", "hasPR", data[claimId].hasPR);
+    }
+    if (data.hasOwnProperty(claimId) && data[claimId].hasOwnProperty("csv")) {
+      await setDataToFirestore(claimId, "16", "csv", data[claimId].csv);
+    }
   }
 };
 
@@ -163,6 +176,7 @@ const initDataToFirestore = async (value: string) => {
         userId: userId,
         entidadBancaria: value,
         currentStep: "6b",
+        hasPR: false,
       }
     );
     console.log("Reclamacion creada con ID: ", docRef.id);

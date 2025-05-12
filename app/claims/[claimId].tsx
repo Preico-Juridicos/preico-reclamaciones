@@ -15,6 +15,7 @@ import {
   handleConfirmarDireccionStepEvent,
   handleQuienEnviaStepEvent,
   handlePeticionPRStepEvent,
+  handleTelefonoStepEvent,
 } from "@/components/claimTypeDescubierto/descubiertoLogic";
 
 // Componente de Descubierto
@@ -32,6 +33,7 @@ import StepQuienEnvia from "@/components/claimTypeDescubierto/StepQuienEnvia";
 import StepUploadDNI from "@/components/claimTypeDescubierto/StepUploadDNI";
 import StepDNI from "@/components/claimTypeDescubierto/StepDNI";
 import StepConfirmarDireccion from "@/components/claimTypeDescubierto/StepConfirmarDireccion";
+import StepTelefono from "@/components/claimTypeDescubierto/StepTelefono";
 import StepRevisionDocumentos from "@/components/claimTypeDescubierto/StepRevisionDocumentos";
 import StepPeticionPR from "@/components/claimTypeDescubierto/StepPeticionPR";
 import StepGenerarDocumentos from "@/components/claimTypeDescubierto/StepGenerarDocumentos";
@@ -108,10 +110,10 @@ const ClaimForm: React.FC = () => {
   const [previousStepId, setPrevStepId] = useState<string>("1");
   const [canContinue, setCanContinue] = useState<boolean>(true);
   const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
-  const [claimIdentifier, setClaimIdentifier] = useState<string | null>(null);
+  const [claimIdentifier, setClaimIdentifier] = useState<string | null>(null); //descubierto,...
   const [claimCustomCode, setClaimCode] = useState<string | undefined>(
     undefined
-  );
+  ); //codigo alfanumerico del reclamo
   const [claimTitle, setClaimTitle] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -149,14 +151,22 @@ const ClaimForm: React.FC = () => {
         component: StepConfirmarDireccion,
         onNext: handleConfirmarDireccionStepEvent,
       },
-      { id: "15", component: StepRevisionDocumentos },
+      {
+        id: "15",
+        component: StepTelefono,
+        onNext: handleTelefonoStepEvent,
+      },
       {
         id: "16",
+        component: StepRevisionDocumentos,
+      },
+      {
+        id: "17",
         component: StepPeticionPR,
         onNext: handlePeticionPRStepEvent,
       },
-      { id: "17", component: StepGenerarDocumentos, isBranching: true },
-      { id: "18", component: Summary },
+      { id: "18", component: StepGenerarDocumentos, isBranching: true },
+      { id: "19", component: Summary },
     ],
   };
 
@@ -176,6 +186,8 @@ const ClaimForm: React.FC = () => {
         const claimData = await loadClaimDataFromFirebase(claimCode);
         // console.log(claimData);
         if (claimData) {
+          //   console.log(claimCode);
+          //   console.log(claimCustomCode);
           await AsyncStorage.setItem("formData", JSON.stringify(claimData));
           setFormData(claimData); // Carga los datos en el estado
           setClaimCode(claimCode); // Guarda el código del reclamo
@@ -215,7 +227,7 @@ const ClaimForm: React.FC = () => {
         setCanContinue(false);
         setNavigationHistory([]);
         setClaimIdentifier(null);
-        setClaimCode(undefined); 
+        setClaimCode(undefined);
         setClaimTitle(null);
 
         // Limpiar AsyncStorage
@@ -241,9 +253,9 @@ const ClaimForm: React.FC = () => {
   ) => {
     try {
       // Antes de revisar isInFireBase, mira si claimCode existe para actualizar los datos en AsyncStorage y no crear nuevos en Firebase
-      // console.log("claimCode:", claimCode);
-      // console.log("isInFireBase:", isInFireBase);
-      // console.log("data:", data);
+      console.log("claimCode:", claimCode);
+      console.log("isInFireBase:", isInFireBase);
+      console.log("data:", data);
       if (!claimCode) {
         if (!isInFireBase) {
           setFormData((prevData) => {
@@ -298,14 +310,16 @@ const ClaimForm: React.FC = () => {
     } catch (error) {
       console.error("Error al actualizar los datos:", error);
     }
+    console.log(await AsyncStorage.getItem("formData"));
   };
 
   // Ir a un paso específico (para ramificaciones)
   const goToStep = async (stepId: string) => {
     try {
-      console.log("goToStep:", stepId);
+      //   console.log("goToStep:", stepId);
       await handleOnNextEvents();
       if (stepId === "-1") {
+        await AsyncStorage.removeItem("formData");
         handleGoToHome();
         return;
       }
@@ -344,8 +358,10 @@ const ClaimForm: React.FC = () => {
               formData || {},
               claimIdentifier
             );
+            console.log("result", result);
             if (result !== undefined) {
               setClaimIdentifier(result); // Guardar el identificador en el estado
+              setClaimCode(result);
             }
           }
           break;
@@ -365,6 +381,7 @@ const ClaimForm: React.FC = () => {
         case currentStep.onNext
           .toString()
           .includes("handlePeticionPRStepEvent"):
+        case currentStep.onNext.toString().includes("handleTelefonoStepEvent"):
           await currentStep.onNext(formData || {}, claimIdentifier);
           break;
         default:
@@ -436,7 +453,7 @@ const ClaimForm: React.FC = () => {
         {steps.findIndex((step) => step.id === currentStepId) > 0 && (
           <SecondaryButton title="Anterior" onPress={handlePrevStep} />
         )}
-        <PrimaryButton title="consola" onPress={logStoredData} />
+        {/* <PrimaryButton title="consola" onPress={logStoredData} /> */}
         {/* <SecondaryButton title="clean formData" onPress={cleanStoredData} /> */}
         {!currentStep.isBranching && (
           <PrimaryButton

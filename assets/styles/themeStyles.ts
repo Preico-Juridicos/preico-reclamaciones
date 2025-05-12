@@ -418,6 +418,7 @@ const createStyles = (isDarkMode = useTheme().isDarkMode) => {
       borderColor: theme.text,
       borderRadius: 8,
       padding: 10,
+      marginTop: 15,
       marginBottom: 15,
       color: theme.text,
     },

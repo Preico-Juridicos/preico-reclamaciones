@@ -25,6 +25,7 @@ export default function UserId() {
   useEffect(() => {
     const fetchConfig = async () => {
       const user = auth.currentUser;
+
       if (!user) {
         Alert.alert("Error", "Usuario no autenticado.");
         return;

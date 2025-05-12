@@ -90,7 +90,8 @@ const solicitarFirma = async (token, signer, pdfOptions, options = {}) => {
     const response = await makeFirmafyRequest("request", data);
 
     if (response.error === false) {
-      return response.message;
+      console.log(response);
+      return response;
     } else {
       throw new Error("Error en la solicitud de firma: " + response.message);
     }
@@ -123,7 +124,9 @@ const suscribirseWebhook = async (token, type, method, url_webhook) => {
     if (!response.error) {
       return response.message;
     } else {
-      throw new Error("Error en la suscripción al webhook: " + response.message);
+      throw new Error(
+        "Error en la suscripción al webhook: " + response.message
+      );
     }
   } catch (error) {
     console.error("Error al suscribirse al webhook:", error.message);

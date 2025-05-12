@@ -4,7 +4,11 @@ import { PrimaryButton, SecondaryButton } from "../Buttons";
 import CollapsibleView from "../CollapsibleView";
 import { useTheme } from "@/contexts/ThemeContext";
 import createStyles from "@/assets/styles/themeStyles";
-
+import { sendPreicoTeAyudaEmailNotification } from "@api/emailService";
+import {
+    getUserData,
+    getCurrentUserId,
+  } from "@/firebase.config";
 type StepComponentProps = {
   stepId: string;
   data: Record<string, any>;
@@ -35,17 +39,19 @@ const StepSolicitarMovimientos: React.FC<StepComponentProps> = ({
     goToStep("5");
   };
 
-  //   const handlePreviousStep = () => {
-  //     // updateStep(3);
-  //     navigation.goBack();
-  //   };
+  const handlePreicoTeAyuda = async () => {
+    const userID = getCurrentUserId();
+    if (!userID) return;
+    const userD = await getUserData(userID);
+    if (!userD) {
+      throw new Error("No se ha podido obtener los datos del usuario");
+    }
+    
+    // updateStep(3);
+    await sendPreicoTeAyudaEmailNotification(userD);
+    goToStep("-1");
 
-  //   const handleGoHome = () => {
-  //     navigation.reset({
-  //       index: 0,
-  //       routes: [{ name: "Inicio" }],
-  //     });
-  //   };
+  };
 
   return (
     <ScrollView style={styles.formContainer}>
@@ -57,7 +63,13 @@ const StepSolicitarMovimientos: React.FC<StepComponentProps> = ({
         Despliega una de las opciones.
       </Text>
       <View style={{ gap: 10, marginTop: 10 }}>
-        <CollapsibleView title="SOLICITALO TU MISMO">
+        <CollapsibleView
+          title="SOLICITALO TU MISMO"
+          collapsibleContainerStyle={undefined}
+          collapsibleHeaderStyle={undefined}
+          collapsibleHeaderTextStyle={undefined}
+          collapsibleContentStyle={undefined}
+        >
           <Text style={styles.collapsibleContentText}>
             Solicita personalmente los movimientos de tu cuenta.
           </Text>
@@ -92,7 +104,13 @@ const StepSolicitarMovimientos: React.FC<StepComponentProps> = ({
             </View>
           </View>
         </CollapsibleView>
-        <CollapsibleView title="PREICO TE AYUDA">
+        <CollapsibleView
+          title="PREICO TE AYUDA"
+          collapsibleContainerStyle={undefined}
+          collapsibleHeaderStyle={undefined}
+          collapsibleHeaderTextStyle={undefined}
+          collapsibleContentStyle={undefined}
+        >
           <Text style={styles.collapsibleContentText}>
             Te ayudaremos a enviar la reclamación a tu banco, basada en la
             normativa del Banco de España. Recuerda, no deben cobrarte por estos
@@ -101,7 +119,7 @@ const StepSolicitarMovimientos: React.FC<StepComponentProps> = ({
             el proceso.
           </Text>
           <View style={{ gap: 10 }}>
-            <PrimaryButton onPress={handleNextStep} title="Seguimos" />
+            <PrimaryButton onPress={handlePreicoTeAyuda} title="Seguimos" />
           </View>
         </CollapsibleView>
       </View>

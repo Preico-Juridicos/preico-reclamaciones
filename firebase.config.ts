@@ -39,6 +39,7 @@ type UserType = {
   whoSends?: string;
   hasPR?: boolean;
   hasPN?: boolean;
+  phone?: string;
 };
 
 // Funciones

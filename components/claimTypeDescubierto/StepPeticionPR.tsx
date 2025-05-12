@@ -1,16 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, Alert } from "react-native";
+import { View, Text, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
 import { useTheme } from "@/contexts/ThemeContext";
 import createStyles from "@/assets/styles/themeStyles";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getUserData, getCurrentUserId, storage } from "@/firebase.config";
-import {
-  ref,
-  uploadBytes,
-  deleteObject,
-} from "firebase/storage";
+import { ref, uploadBytes, deleteObject } from "firebase/storage";
 
 import { useRouter } from "expo-router";
 import { generatePR } from "@api/pdfGenerationService";
@@ -43,6 +39,7 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
   const { isDarkMode } = useTheme();
   const styles = createStyles(isDarkMode);
   const [cantidadCuentas, setCantidadCuentas] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -59,6 +56,18 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
 
     fetchData();
   }, []);
+
+  //   useEffect(() => {
+  //     if (claimCode) {
+  //       const nuevoCsv = data[claimCode]?.csv;
+  //       console.log(data);
+  //       if (nuevoCsv) {
+  //         updateData(claimCode, { csv: nuevoCsv }, true);
+  //         updateData(claimCode, { hasPR: false }, true);
+  //       }
+  //     }
+  //     // sólo reevalúa cuando cambie el csv de este claimCode
+  //   }, [claimCode ? data[claimCode]?.csv : undefined, claimCode, updateData]);
 
   const subirPdfDesdeUrl = async (pdfUrl: string, pdfName: string) => {
     try {
@@ -80,7 +89,7 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
         storageRef.bucket
       }/o/${encodeURIComponent(storageRef.fullPath)}?alt=media`;
 
-    //   console.log("PDF subido exitosamente:", downloadURL);
+      //   console.log("PDF subido exitosamente:", downloadURL);
       return downloadURL;
     } catch (error) {
       console.error("Error al subir el PDF desde la URL:", error);
@@ -93,6 +102,7 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
   };
 
   const handleSubmitPR = async () => {
+    setIsLoading(true);
     try {
       const userID = getCurrentUserId();
       if (!userID) return;
@@ -100,9 +110,10 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
       if (!userD) {
         throw new Error("No se ha podido obtener los datos del usuario");
       }
+      //   console.log(claimCode);
       if (!claimCode) return;
       //   console.log(claimCode);
-      await updateData(claimCode, { hasPR: false }, true);
+      updateData(claimCode, { hasPR: false }, true);
 
       //   console.log(data[claimCode]);
       const pdfData = {
@@ -131,44 +142,57 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
         dni: userD.dni,
         email: userD.email,
         cargo: "Contratante",
-        telefono: 697222324,
+        telefono: data[claimCode].phone,
       };
       const firmafyResponse = await enviarSolicitudDeFirma(
         pdfResponse.fileName,
         newURL,
         userData
       );
+      //   await new Promise((resolve) => setTimeout(resolve, 2000));
 
-      console.log(firmafyResponse);
       if (!firmafyResponse.success) {
         throw new Error("Error al enviar a Firmafy");
       }
+      updateData(claimCode, { csv: firmafyResponse.csv }, true);
 
       await eliminarArchivoDelStorage(pdfResponse.fileName);
 
-      Alert.alert(
-        "Petición Enviada",
-        cantidadCuentas === 1
-          ? "Hemos enviando la petición a tu correo. Por favor vuelve cuando la tengas firmada."
-          : "Hemos enviando la petición a tu correo. Por favor vuelve cuando la tengas firmada. Ahora procederemos con la siguiente cuenta."
-      );
-      // Esperar 2 segundos para que el usuario vea la alerta
-      //   await new Promise((resolve) => setTimeout(resolve, 2000));
+      const AsyncAlert = () =>
+        new Promise((resolve) => {
+          Alert.alert(
+            "Petición Enviada",
+            cantidadCuentas === 1
+              ? "Hemos enviando la petición a tu correo. Por favor vuelve cuando la tengas firmada."
+              : "Hemos enviando la petición a tu correo. Por favor vuelve cuando la tengas firmada. Ahora procederemos con la siguiente cuenta.",
+            [
+              {
+                text: "ok",
+                onPress: () => {
+                  resolve("De acuerdo");
+                },
+              },
+            ],
+            { cancelable: false }
+          );
+        });
 
-      if (cantidadCuentas > 1) {
-        delete data[claimCode];
-        await AsyncStorage.setItem("formData", JSON.stringify(data));
-        const newCantidadCuentas = cantidadCuentas - 1;
-        setCantidadCuentas(newCantidadCuentas);
-        await updateCantidadCuentasInStorage(newCantidadCuentas);
-        goToStep("6b");
-      } else {
-        await AsyncStorage.removeItem("formData");
-        handleGoHome();
-      }
+      await AsyncAlert();
     } catch (error) {
       console.error("Error al enviar la petición:", error);
       Alert.alert("Error", "Hubo un problema al enviar la petición.");
+    } finally {
+      setIsLoading(false);
+      if (!claimCode) return;
+      if (cantidadCuentas > 1) {
+        delete data[claimCode];
+        const updatedData = { ...data, cantidadCuentas: cantidadCuentas - 1 };
+        await AsyncStorage.setItem("formData", JSON.stringify(updatedData));
+        setCantidadCuentas(cantidadCuentas - 1);
+        goToStep("6b");
+      } else {
+        handleGoHome();
+      }
     }
   };
 
@@ -202,7 +226,17 @@ const StepPeticionPR: React.FC<StepComponentProps> = ({
         sistema seguro de firmas online para ello.
       </Text>
       <View style={{ gap: 10, marginTop: 10 }}>
-        <PrimaryButton onPress={handleSubmitPR} title="Enviame la petición" />
+        {isLoading && (
+          <ActivityIndicator
+            size="small"
+            color={styles.buttonPrimary.backgroundColor}
+          />
+        )}
+
+        <PrimaryButton
+          onPress={handleSubmitPR}
+          title={isLoading ? "Enviando..." : "Enviame la petición"}
+        />
         <SecondaryButton title="Mejor Luego" onPress={handleGoHome} />
       </View>
     </ScrollView>

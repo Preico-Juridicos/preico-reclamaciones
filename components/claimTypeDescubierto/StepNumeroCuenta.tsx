@@ -59,7 +59,7 @@ const StepNumeroCuenta: React.FC<StepComponentProps> = ({
   }, [claimCode]);
 
   const handleInputChange = (value: string) => {
-    setNumeroCuenta(value);
+    setNumeroCuenta(value.toUpperCase());
     updateData(stepId, { numeroCuenta: value }, true);
   };
 

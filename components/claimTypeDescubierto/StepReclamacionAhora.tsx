@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { View, Text, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { PrimaryButton, SecondaryButton } from "../Buttons";
 import { useTheme } from "@/contexts/ThemeContext";
 import createStyles from "@/assets/styles/themeStyles";
@@ -23,6 +23,7 @@ const StepReclamacionAhora: React.FC<StepComponentProps> = ({
 }) => {
   const { isDarkMode } = useTheme();
   const styles = createStyles(isDarkMode);
+  const [isLoading, setIsLoading] = useState(false);
 
   //   useEffect(() => {
   //     if (currentStep !== 5) {
@@ -52,6 +53,13 @@ const StepReclamacionAhora: React.FC<StepComponentProps> = ({
         ¿Te preparamos el documento de reclamación ahora?
       </Text>
       <View style={{ gap: 10, marginTop: 10 }}>
+        {isLoading && (
+          <ActivityIndicator
+            size="small"
+            color={styles.buttonPrimary.backgroundColor}
+          />
+        )}
+
         <PrimaryButton onPress={handleNextStep} title="Sí" />
         {/* <SecondaryButton title="Más adelante" onPress={handleGoHome} />
         <SecondaryButton title="Atras" onPress={handlePreviousStep} /> */}

@@ -14,14 +14,16 @@ const CollapsibleView = ({
 }) => {
   const [collapsed, setCollapsed] = useState(true);
   const animation = useState(new Animated.Value(0))[0];
-  
+
   const { isDarkMode } = useTheme();
   const styles = createStyles(isDarkMode);
 
-  const containerStyle = collapsibleContainerStyle || styles.collapsibleContainer;
-  const headerStyle = collapsibleHeaderStyle || styles.collapsibleHeader;
-  const headerTextStyle = collapsibleHeaderTextStyle || styles.collapsibleHeaderText;
-  const contentStyle = collapsibleContentStyle || styles.collapsibleContent;
+  //   Hacer que revise si los atibutos son undefined o null y si lo son, usar el estilo por defecto
+
+  const containerStyle = collapsibleContainerStyle ?? styles.collapsibleContainer;
+  const headerStyle = collapsibleHeaderStyle ?? styles.collapsibleHeader;
+  const headerTextStyle = collapsibleHeaderTextStyle ?? styles.collapsibleHeaderText;
+  const contentStyle = collapsibleContentStyle ?? styles.collapsibleContent;
 
   const toggleCollapse = () => {
     Animated.timing(animation, {
@@ -41,7 +43,9 @@ const CollapsibleView = ({
     <View style={containerStyle}>
       <TouchableWithoutFeedback onPress={toggleCollapse}>
         <View style={headerStyle}>
-          <Text style={headerTextStyle}>{title} {collapsed ? "▼" : "▲"}</Text>
+          <Text style={headerTextStyle}>
+            {title} {collapsed ? "▼" : "▲"}
+          </Text>
         </View>
       </TouchableWithoutFeedback>
       <Animated.View

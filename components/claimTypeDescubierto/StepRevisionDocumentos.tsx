@@ -45,10 +45,10 @@ const StepRevisionDocumentos: React.FC<StepComponentProps> = ({
         console.log(hasPR);
         if (hasPR) {
         //   updateData(stepId, { hasPR: true }, true);
-          goToStep("17");
+          goToStep("18");
         } else {
         //   updateData(stepId, { hasPR: false }, true);
-          goToStep("16");
+          goToStep("17");
         }
       }
     } catch (error) {
